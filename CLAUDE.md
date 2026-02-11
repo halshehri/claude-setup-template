@@ -60,6 +60,11 @@ claude-setup-template/
         │   └── adk/                # Google ADK reference files
         │       ├── adk-fundamentals.md
         │       ├── adk-agents.md
+        │       ├── adk-tools.md
+        │       ├── adk-custom-tools.md
+        │       ├── adk-memory.md
+        │       ├── adk-runtime-deploy.md
+        │       ├── adk-advanced.md
         │       └── STATUS.md
         └── gitignore.template      # .gitignore template for target projects
 ```
@@ -94,5 +99,5 @@ The process is driven by `bootstrap/SKILL.md` (5 phases):
 - 7 skill templates in `bootstrap/templates/skills/`
 - 2 agent templates in `bootstrap/templates/agents/`
 - 3 CLAUDE.md templates in `bootstrap/templates/claude-md/`
-- 3 ADK reference files in `bootstrap/templates/reference/adk/`
+- 8 ADK reference files in `bootstrap/templates/reference/adk/`
 - 1 gitignore template
