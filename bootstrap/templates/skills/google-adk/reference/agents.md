@@ -291,7 +291,7 @@ from google.genai import types
 
 agent = Agent(
     name="thinking_agent",
-    model="gemini-2.5-pro-preview-03-25",
+    model="gemini-2.5-pro",
     planner=BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
             include_thoughts=True,  # Include reasoning in response
@@ -365,7 +365,7 @@ farewell_agent = Agent(
 # Sequential workflow
 root_agent = SequentialAgent(
     name="workflow",
-    agents=[greeting_agent, main_agent, farewell_agent]
+    sub_agents=[greeting_agent, main_agent, farewell_agent]
 )
 # Executes: greeting -> main -> farewell (in order)
 ```
@@ -395,7 +395,7 @@ stocks_agent = Agent(
 
 root_agent = ParallelAgent(
     name="dashboard",
-    agents=[weather_agent, news_agent, stocks_agent]
+    sub_agents=[weather_agent, news_agent, stocks_agent]
 )
 # Executes: All three agents concurrently
 ```
@@ -404,22 +404,33 @@ root_agent = ParallelAgent(
 
 ```python
 from google.adk.agents import LoopAgent, Agent
+from google.adk.tools import ToolContext
+
+# To break out of the loop early, a tool run by a sub-agent sets
+# tool_context.actions.escalate = True. Otherwise the loop stops at
+# max_iterations.
+def finish_if_done(tool_context: ToolContext) -> dict:
+    """Mark the loop as done when there are no items left."""
+    remaining = tool_context.state.get("items", [])
+    if not remaining:
+        tool_context.actions.escalate = True
+        return {"status": "done"}
+    return {"status": "continue", "remaining": len(remaining)}
 
 processing_agent = Agent(
     name="processor",
     model="gemini-2.5-flash",
-    instruction="Process one item and store result in state['processed']"
+    instruction=(
+        "Process one item from state['items'] and store the result. "
+        "Then call finish_if_done to decide whether to stop."
+    ),
+    tools=[finish_if_done],
 )
-
-def should_continue(state: dict) -> bool:
-    """Loop until all items processed."""
-    return len(state.get('items', [])) > 0
 
 root_agent = LoopAgent(
     name="batch_processor",
-    agent=processing_agent,
-    max_iterations=100,
-    termination_condition=should_continue
+    sub_agents=[processing_agent],
+    max_iterations=100,  # hard cap
 )
 ```
 
@@ -452,7 +463,7 @@ root_agent = Agent(
     - For technical issues, transfer to technical agent
     - For general questions, handle yourself
     """,
-    tools=[billing_agent, technical_agent]  # Sub-agents as tools
+    sub_agents=[billing_agent, technical_agent]  # LLM-driven transfer
 )
 # LLM decides when to transfer based on instruction
 ```
@@ -513,7 +524,7 @@ root_agent = Agent(
     2. Use writer to create content
     3. Use reviewer to improve quality
     """,
-    tools=[research_agent, writer_agent, reviewer_agent]
+    sub_agents=[research_agent, writer_agent, reviewer_agent]
 )
 ```
 
@@ -530,7 +541,7 @@ root_agent = Agent(
     - Log all tool usage
     """,
     instruction="Your specific task...",
-    tools=[sub_agent1, sub_agent2]
+    sub_agents=[sub_agent1, sub_agent2]
 )
 # global_instruction applied to entire agent hierarchy
 ```
@@ -561,7 +572,7 @@ router = Agent(
     - support_agent for technical help
     - sales_agent for product info
     """,
-    tools=[billing_agent, support_agent, sales_agent]
+    sub_agents=[billing_agent, support_agent, sales_agent]
 )
 ```
 
@@ -570,7 +581,7 @@ router = Agent(
 """Sequential processing pipeline"""
 root_agent = SequentialAgent(
     name="pipeline",
-    agents=[
+    sub_agents=[
         input_validator,
         data_processor,
         output_formatter
@@ -583,7 +594,7 @@ root_agent = SequentialAgent(
 """Collect data in parallel, then process"""
 gather_agent = ParallelAgent(
     name="gather",
-    agents=[source1_agent, source2_agent, source3_agent]
+    sub_agents=[source1_agent, source2_agent, source3_agent]
 )
 
 process_agent = Agent(
@@ -594,26 +605,27 @@ process_agent = Agent(
 
 root_agent = SequentialAgent(
     name="workflow",
-    agents=[gather_agent, process_agent]
+    sub_agents=[gather_agent, process_agent]
 )
 ```
 
 ### Pattern: Try-Fallback
 ```python
-"""Try primary agent, fallback to secondary"""
-def fallback_logic(state):
-    if 'primary_result' in state and state['primary_result']:
-        return False  # Success, don't continue
-    return True  # Failed, try fallback
+"""Try primary agent, fallback to secondary.
+
+The attempts pipeline runs primary then fallback. A check tool inside
+the pipeline sets tool_context.actions.escalate = True when the primary
+result is good, so the loop exits early.
+"""
+attempts = SequentialAgent(
+    name="attempts",
+    sub_agents=[primary_agent, fallback_agent],
+)
 
 root_agent = LoopAgent(
     name="try_fallback",
-    agent=SequentialAgent(
-        name="attempts",
-        agents=[primary_agent, fallback_agent]
-    ),
+    sub_agents=[attempts],
     max_iterations=1,
-    termination_condition=fallback_logic
 )
 ```
 

@@ -401,7 +401,8 @@ MCP is an open protocol that standardizes how applications provide tools and con
 
 ```python
 from google.adk.agents import Agent
-from google.adk.tools.mcp_tool import MCPToolset, StdioServerParameters
+from google.adk.tools.mcp_tool import MCPToolset
+from mcp import StdioServerParameters
 
 agent = Agent(
     name="filesystem_agent",
@@ -423,7 +424,8 @@ agent = Agent(
 #### Connecting to an SSE MCP Server
 
 ```python
-from google.adk.tools.mcp_tool import MCPToolset, SseServerParams
+from google.adk.tools.mcp_tool import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import SseServerParams
 
 agent = Agent(
     name="data_agent",
@@ -443,14 +445,17 @@ agent = Agent(
 #### Connecting to a Streamable HTTP MCP Server
 
 ```python
-from google.adk.tools.mcp_tool import MCPToolset, StreamableHTTPToolset
+from google.adk.tools.mcp_tool import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import (
+    StreamableHTTPConnectionParams,
+)
 
 agent = Agent(
     name="api_agent",
     model="gemini-2.5-flash",
     tools=[
         MCPToolset(
-            connection_params=StreamableHTTPToolset(
+            connection_params=StreamableHTTPConnectionParams(
                 url="http://localhost:3000/mcp",
             )
         )
@@ -492,8 +497,7 @@ MCPToolset(
 ### TypeScript MCP Integration
 
 ```typescript
-import { LlmAgent } from '@google/adk';
-import { MCPToolset, StdioServerParameters } from '@google/adk/tools';
+import { LlmAgent, MCPToolset, StdioServerParameters } from '@google/adk';
 
 const agent = new LlmAgent({
     name: 'fs_agent',
@@ -542,9 +546,11 @@ MCP connections are managed automatically by ADK. When using `adk web run` or `a
 For programmatic usage, handle the lifecycle explicitly:
 
 ```python
-from google.adk.tools.mcp_tool import MCPToolset, StdioServerParameters
+from google.adk.tools.mcp_tool import MCPToolset
+from mcp import StdioServerParameters
 
 async def main():
+    from mcp import StdioServerParameters
     tools, exit_stack = await MCPToolset.from_server(
         connection_params=StdioServerParameters(
             command="npx",
@@ -572,15 +578,19 @@ async def main():
 `OpenAPIToolset` automatically generates tools from an OpenAPI (Swagger) specification. Each API endpoint becomes a callable tool.
 
 ```python
+import json
 from google.adk.tools.openapi_tool import OpenAPIToolset
 
-# Load from a spec file
-toolset = OpenAPIToolset.from_file("path/to/openapi.yaml")
+# Load from a local YAML spec file
+with open("path/to/openapi.yaml") as f:
+    toolset = OpenAPIToolset(spec_str=f.read(), spec_str_type="yaml")
 
-# Or from a URL
-toolset = OpenAPIToolset.from_url("https://api.example.com/openapi.json")
+# Load from a URL (fetch it yourself, then construct)
+import httpx
+spec_text = httpx.get("https://api.example.com/openapi.json").text
+toolset = OpenAPIToolset(spec_str=spec_text, spec_str_type="json")
 
-# Or from a dict
+# Or from an in-memory dict (serialize to a string first)
 spec = {
     "openapi": "3.0.0",
     "info": {"title": "Pet Store", "version": "1.0.0"},
@@ -589,13 +599,13 @@ spec = {
             "get": {
                 "operationId": "listPets",
                 "summary": "List all pets",
-                "parameters": [...],
-                "responses": {...}
+                "parameters": [],
+                "responses": {},
             }
         }
-    }
+    },
 }
-toolset = OpenAPIToolset.from_spec(spec)
+toolset = OpenAPIToolset(spec_str=json.dumps(spec), spec_str_type="json")
 
 agent = Agent(
     name="pet_store_agent",
@@ -609,22 +619,18 @@ agent = Agent(
 
 #### Filtering Operations
 
-```python
-# Only include specific operations
-toolset = OpenAPIToolset.from_file(
-    "openapi.yaml",
-    # Filter to specific operation IDs
-    operations=["listPets", "getPet", "createPet"]
-)
-```
-
-#### Base URL Override
+<!-- VERIFY: OpenAPIToolset operation filtering and base URL override -->
+<!-- TODO: Confirm the exact kwargs (operation filter, base URL) on the
+     real OpenAPIToolset constructor. The real API takes spec_str +
+     spec_str_type; additional filtering/base-url kwargs need to be
+     verified against the ADK docs before documenting here. -->
 
 ```python
-toolset = OpenAPIToolset.from_file(
-    "openapi.yaml",
-    base_url="https://staging-api.example.com"  # Override server URL
-)
+# Example scaffolding (verify kwargs):
+# toolset = OpenAPIToolset(
+#     spec_str=open("openapi.yaml").read(),
+#     spec_str_type="yaml",
+# )
 ```
 
 ### Authentication with OpenAPI Tools
@@ -644,10 +650,12 @@ api_key_auth = AuthCredential(
     )
 )
 
-toolset = OpenAPIToolset.from_file(
-    "openapi.yaml",
-    auth_credential=api_key_auth
-)
+with open("openapi.yaml") as f:
+    toolset = OpenAPIToolset(
+        spec_str=f.read(),
+        spec_str_type="yaml",
+        auth_credential=api_key_auth,
+    )
 
 agent = Agent(
     name="api_agent",
@@ -1191,13 +1199,20 @@ MCPToolset(
 ### OpenAPI Spec Mismatches
 ```python
 # WRONG: Spec references localhost but agent runs in cloud
-toolset = OpenAPIToolset.from_file("openapi.yaml")
+with open("openapi.yaml") as f:
+    toolset = OpenAPIToolset(spec_str=f.read(), spec_str_type="yaml")
 # Spec has: servers: [{url: "http://localhost:3000"}]
 
-# RIGHT: Override the base URL for your environment
-toolset = OpenAPIToolset.from_file(
-    "openapi.yaml",
-    base_url="https://api.production.example.com"
+# RIGHT: Rewrite the `servers` entry in the spec before constructing
+# the toolset, or edit the YAML to point at the production URL.
+# <!-- VERIFY: whether OpenAPIToolset exposes a base_url kwarg -->
+import yaml
+with open("openapi.yaml") as f:
+    spec = yaml.safe_load(f)
+spec["servers"] = [{"url": "https://api.production.example.com"}]
+toolset = OpenAPIToolset(
+    spec_str=yaml.safe_dump(spec),
+    spec_str_type="yaml",
 )
 ```
 

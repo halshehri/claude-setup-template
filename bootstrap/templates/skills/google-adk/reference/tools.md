@@ -178,25 +178,8 @@ Enables the agent to generate and execute Python code in a secure, sandboxed env
 
 #### Python
 
-```python
-from google.adk.agents import Agent
-from google.adk.tools import built_in_code_execution
-
-agent = Agent(
-    name="code_agent",
-    model="gemini-2.5-flash",
-    instruction="""You are a data analysis assistant.
-    When asked mathematical or data questions:
-    1. Write Python code to solve the problem
-    2. Execute it using code execution
-    3. Return the result with explanation""",
-    tools=[built_in_code_execution]
-)
-
-root_agent = agent
-```
-
-#### Alternative: Code Executor (Agent-Level)
+Code execution is configured at the agent level via `code_executor`,
+not as an importable tool.
 
 ```python
 from google.adk.agents import Agent
@@ -210,7 +193,12 @@ agent = Agent(
     Available libraries: math, numpy-like operations, string processing.
     Always show your code and explain results."""
 )
+
+root_agent = agent
 ```
+
+**Note**: `code_executor` is mutually exclusive with `output_schema`.
+An agent cannot both execute code and produce a structured JSON output.
 
 #### How It Works
 - Agent generates Python code based on the request
@@ -226,20 +214,25 @@ agent = Agent(
 - Great for math, data transformation, string processing, logic problems
 - Cannot interact with external APIs or databases
 
-### Combining Gemini API Tools
+### Combining Google Search with Code Execution
+
+Because code execution is configured via `code_executor` (not as a tool),
+you combine it with `google_search` by setting both on the agent:
 
 ```python
 from google.adk.agents import Agent
-from google.adk.tools import google_search, built_in_code_execution
+from google.adk.tools import google_search
+from google.adk.code_executors import BuiltInCodeExecutor
 
 agent = Agent(
     name="research_analyst",
     model="gemini-2.5-flash",
     instruction="""You are a research analyst.
     - Use Google Search to find data and statistics
-    - Use Code Execution to perform calculations and analysis
+    - Write and run Python code to perform calculations and analysis
     - Combine research with computation for data-driven answers""",
-    tools=[google_search, built_in_code_execution]
+    tools=[google_search],
+    code_executor=BuiltInCodeExecutor(),
 )
 
 root_agent = agent
@@ -527,7 +520,9 @@ Connect to any MCP-compatible server to use its tools.
 
 ```python
 from google.adk.agents import Agent
-from google.adk.tools.mcp_tool import MCPToolset, SseServerParams, StdioServerParameters
+from google.adk.tools.mcp_tool import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import SseServerParams
+from mcp import StdioServerParameters
 
 # Connect to an MCP server via SSE
 mcp_tools, exit_stack = await MCPToolset.from_server(
@@ -552,7 +547,8 @@ root_agent = agent
 #### MCP via Stdio (Local Process)
 
 ```python
-from google.adk.tools.mcp_tool import MCPToolset, StdioServerParameters
+from google.adk.tools.mcp_tool import MCPToolset
+from mcp import StdioServerParameters
 
 mcp_tools, exit_stack = await MCPToolset.from_server(
     connection_params=StdioServerParameters(
@@ -625,7 +621,7 @@ agent = Agent(
 | Need | Tool Type | Example |
 |------|-----------|---------|
 | Current web information | `google_search` | News, facts, real-time data |
-| Math/data computation | `built_in_code_execution` | Calculations, data transforms |
+| Math/data computation | `BuiltInCodeExecutor` (agent `code_executor=`) | Calculations, data transforms |
 | Your own documents | `VertexAiSearchTool` | Product docs, manuals |
 | Database analytics | `BigQueryToolset` | Sales reports, metrics |
 | Vector similarity search | `VertexAiRagRetrieval` | Semantic document search |
@@ -881,6 +877,7 @@ agent = Agent(tools=mcp_tools)
 
 # CORRECT: Use async context manager or explicit cleanup
 async def create_agent():
+    from google.adk.tools.mcp_tool.mcp_session_manager import SseServerParams
     mcp_tools, exit_stack = await MCPToolset.from_server(
         connection_params=SseServerParams(url="http://localhost:3000/sse")
     )
@@ -923,9 +920,10 @@ def get_data() -> dict:
 
 ```python
 # WRONG: Trying to use code execution for web requests
+from google.adk.code_executors import BuiltInCodeExecutor
 agent = Agent(
     model="gemini-2.5-flash",
-    tools=[built_in_code_execution],
+    code_executor=BuiltInCodeExecutor(),
     instruction="Use code execution to call external APIs"
     # Code execution is SANDBOXED - no network access!
 )

@@ -79,15 +79,16 @@ uv_params = StdioServerParameters(
 )
 ```
 
-#### SseServerParameters (Remote MCP Servers)
+#### SseServerParams (Remote MCP Servers)
 
 Use this when the MCP server is running remotely and communicating over HTTP Server-Sent Events.
 
 ```python
-from google.adk.tools.mcp_tool import MCPToolset, SseServerParameters
+from google.adk.tools.mcp_tool import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import SseServerParams
 
 # Remote MCP server via SSE
-remote_params = SseServerParameters(
+remote_params = SseServerParams(
     url="http://localhost:8080/sse",
     headers={"Authorization": "Bearer my-token"},  # Optional auth headers
 )
@@ -246,63 +247,32 @@ A2A complements MCP: while MCP connects agents to tools/data, A2A connects agent
 - Distributed multi-agent systems across services
 - Agent discovery and capability advertisement
 
-### A2A Server
+### A2A Server (Exposing an ADK Agent)
 
-Set up an ADK agent to be accessible via the A2A protocol.
+<!-- VERIFY: A2A server API surface. The ADK docs describe this via
+     quickstart guides; the exact helper names and imports should be
+     confirmed against https://adk.dev/a2a/ before relying on this
+     snippet. The commonly-referenced helper is `to_a2a()`, which wraps
+     an ADK agent into an A2A-compatible app. -->
 
 ```python
-from google.adk.agents import Agent
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.adk.a2a import A2aServer
-
-# Define your agent
-expense_agent = Agent(
-    name="expense_agent",
-    model="gemini-2.5-flash",
-    instruction="""You are an expense reporting agent.
-    Help users create and manage expense reports.
-    """,
-    tools=[create_expense, get_expenses, approve_expense],
-)
-
-# Create runner
-session_service = InMemorySessionService()
-runner = Runner(
-    agent=expense_agent,
-    app_name="expense_app",
-    session_service=session_service,
-)
-
-# Start A2A server
-a2a_server = A2aServer(
-    runner=runner,
-    agent_card={
-        "name": "Expense Agent",
-        "description": "Handles expense report creation and management",
-        "url": "http://localhost:8001",
-        "version": "1.0.0",
-        "capabilities": {
-            "streaming": True,
-            "pushNotifications": False,
-        },
-        "skills": [
-            {
-                "id": "create_expense",
-                "name": "Create Expense Report",
-                "description": "Creates a new expense report with line items",
-            },
-            {
-                "id": "manage_expenses",
-                "name": "Manage Expenses",
-                "description": "View, edit, and approve expense reports",
-            },
-        ],
-    },
-)
-
-# Run the server (typically on its own port)
-a2a_server.start(host="0.0.0.0", port=8001)
+# TODO: Confirm exact import path for to_a2a() in your installed ADK version.
+# Example scaffolding:
+#
+# from google.adk.agents import Agent
+# from google.adk.a2a import to_a2a  # <-- verify import
+#
+# expense_agent = Agent(
+#     name="expense_agent",
+#     model="gemini-2.5-flash",
+#     instruction="You are an expense reporting agent...",
+#     tools=[create_expense, get_expenses, approve_expense],
+# )
+#
+# # Wrap the agent as an A2A-compatible ASGI app and serve it.
+# a2a_app = to_a2a(expense_agent)
+# # Run with uvicorn / any ASGI server:
+# #   uvicorn my_module:a2a_app --host 0.0.0.0 --port 8001
 ```
 
 #### Agent Card Discovery
@@ -332,61 +302,34 @@ A2A servers expose their Agent Card at `/.well-known/agent.json`:
 }
 ```
 
-### A2A Client
+### A2A Client (Consuming a Remote Agent)
 
-Connect to remote A2A agents using `A2aToolset`.
-
-```python
-from google.adk.agents import Agent
-from google.adk.tools.a2a_tool import A2aToolset
-
-# Create a toolset from a remote A2A agent
-expense_toolset = A2aToolset(
-    agent_card_url="http://localhost:8001/.well-known/agent.json"
-)
-
-# Use A2A agent as tools in your orchestrator agent
-orchestrator = Agent(
-    name="orchestrator",
-    model="gemini-2.5-flash",
-    instruction="""You coordinate business operations.
-    Use the expense agent for expense-related tasks.
-    Use the calendar agent for scheduling tasks.
-    """,
-    tools=[
-        *expense_toolset.get_tools(),
-        *calendar_toolset.get_tools(),
-    ],
-)
-```
-
-#### Direct A2A Client Usage
+<!-- VERIFY: A2A client API. The standard pattern is RemoteA2aAgent, which
+     behaves as a regular ADK agent and can be placed in `sub_agents=` of
+     a parent agent for LLM-driven delegation. Confirm import path against
+     https://adk.dev/a2a/ for your ADK version. -->
 
 ```python
-from google.adk.a2a import A2aClient
-
-# Create client
-client = A2aClient(url="http://localhost:8001")
-
-# Discover agent capabilities
-agent_card = await client.get_agent_card()
-print(f"Agent: {agent_card['name']}")
-print(f"Skills: {[s['name'] for s in agent_card['skills']]}")
-
-# Send a task
-task = await client.send_task(
-    message="Create an expense report for the NYC trip, $500 for hotel, $200 for meals",
-)
-
-# Check task status
-status = await client.get_task(task_id=task["id"])
-print(f"Status: {status['status']['state']}")
-
-# Stream task updates
-async for update in client.send_task_streaming(
-    message="Process the expense report"
-):
-    print(f"Update: {update}")
+# Example scaffolding:
+#
+# from google.adk.agents import Agent
+# from google.adk.agents.remote_a2a_agent import RemoteA2aAgent  # <-- verify
+#
+# expense_agent = RemoteA2aAgent(
+#     name="expense_agent",
+#     description="Remote expense reporting agent",
+#     agent_card="http://localhost:8001/.well-known/agent.json",
+# )
+#
+# orchestrator = Agent(
+#     name="orchestrator",
+#     model="gemini-2.5-flash",
+#     instruction=(
+#         "Coordinate business operations. Delegate expense-related "
+#         "tasks to the expense_agent."
+#     ),
+#     sub_agents=[expense_agent],
+# )
 ```
 
 ### A2A Patterns
@@ -415,31 +358,36 @@ Any framework that implements the A2A protocol can communicate with ADK agents. 
 # Service C: Custom approval agent (port 8003)
 
 # Orchestrator discovers and coordinates all agents
-from google.adk.tools.a2a_tool import A2aToolset
+# <!-- VERIFY: RemoteA2aAgent import path for your ADK version -->
+from google.adk.agents import Agent
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent  # verify
 
-expense_tools = A2aToolset(
-    agent_card_url="http://expense-service:8001/.well-known/agent.json"
+expense_agent = RemoteA2aAgent(
+    name="expense_agent",
+    description="Handles expense reports and reimbursement",
+    agent_card="http://expense-service:8001/.well-known/agent.json",
 )
-calendar_tools = A2aToolset(
-    agent_card_url="http://calendar-service:8002/.well-known/agent.json"
+calendar_agent = RemoteA2aAgent(
+    name="calendar_agent",
+    description="Handles scheduling and availability",
+    agent_card="http://calendar-service:8002/.well-known/agent.json",
 )
-approval_tools = A2aToolset(
-    agent_card_url="http://approval-service:8003/.well-known/agent.json"
+approval_agent = RemoteA2aAgent(
+    name="approval_agent",
+    description="Handles approval workflows",
+    agent_card="http://approval-service:8003/.well-known/agent.json",
 )
 
 orchestrator = Agent(
     name="business_orchestrator",
     model="gemini-2.5-flash",
     instruction="""Coordinate business workflows across services.
-    - expense agent: expense reports and reimbursement
-    - calendar agent: scheduling and availability
-    - approval agent: approval workflows
+    Delegate to:
+    - expense_agent: expense reports and reimbursement
+    - calendar_agent: scheduling and availability
+    - approval_agent: approval workflows
     """,
-    tools=[
-        *expense_tools.get_tools(),
-        *calendar_tools.get_tools(),
-        *approval_tools.get_tools(),
-    ],
+    sub_agents=[expense_agent, calendar_agent, approval_agent],
 )
 ```
 
@@ -563,11 +511,11 @@ eventSource.onerror = (error) => {
 };
 ```
 
-#### Using `adk api run` with Streaming
+#### Using `adk api_server` with Streaming
 
 ```bash
 # Start API server with streaming support
-adk api run --port 8000
+adk api_server --port 8000 .
 
 # The /run_sse endpoint streams events
 # POST /apps/{app_name}/users/{user_id}/sessions/{session_id}/run_sse
@@ -620,41 +568,57 @@ live_agent = Agent(
 )
 ```
 
-#### Live Runner
+#### Live Runner (run_live + LiveRequestQueue)
+
+The real ADK streaming API uses `runner.run_live()` (an async generator
+of events) together with a `LiveRequestQueue` that you push audio/text
+frames into. There is no separate `LiveRunner.connect/send_audio/receive`.
 
 ```python
-from google.adk.runners import LiveRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.adk.agents.live_request_queue import LiveRequestQueue  # verify path
+from google.genai import types
 
 session_service = InMemorySessionService()
-live_runner = LiveRunner(
+runner = Runner(
     agent=live_agent,
     app_name="voice_app",
     session_service=session_service,
 )
 
-# Start a live session
-live_session = await live_runner.connect(
+session = await session_service.create_session(
+    app_name="voice_app",
     user_id="user1",
     session_id="live_session_1",
 )
 
-# Send audio data
-await live_session.send_audio(audio_chunk)  # bytes
+# Queue for pushing live input (audio/text/video blobs) into the model
+live_queue = LiveRequestQueue()
 
-# Receive audio responses
-async for response in live_session.receive():
-    if response.audio:
-        play_audio(response.audio)  # Play audio chunk
-    if response.text:
-        print(response.text)  # Display transcription
+async def pump_audio(audio_chunks):
+    for chunk in audio_chunks:
+        live_queue.send_realtime(
+            types.Blob(data=chunk, mime_type="audio/pcm")
+        )
+    live_queue.close()
 
-# Send video frame
-await live_session.send_video(frame_data)  # bytes (JPEG/PNG)
-
-# Close session
-await live_session.close()
+# runner.run_live yields streaming events (partial text, audio, tool calls)
+async for event in runner.run_live(
+    user_id="user1",
+    session_id=session.id,
+    live_request_queue=live_queue,
+):
+    if event.content and event.content.parts:
+        for part in event.content.parts:
+            if part.text:
+                print(part.text, end="", flush=True)
+            if getattr(part, "inline_data", None):
+                play_audio(part.inline_data.data)
 ```
+
+<!-- VERIFY: exact import path for LiveRequestQueue and the live_request_queue
+     kwarg name on runner.run_live() in your installed ADK version. -->
 
 #### Response Modalities
 
@@ -969,20 +933,23 @@ Plugins are pre-built behavior modifiers that wrap agent execution with addition
 
 ### Reflect and Retry Plugin
 
-The reflect-and-retry plugin catches errors during tool execution and asks the LLM to reflect on the error and retry with corrected parameters.
+Plugins in ADK are registered **once on the Runner**, not on an Agent.
+They apply globally to every agent, tool, and LLM call managed by that
+runner. There is no `plugins=` argument on `Agent`.
 
 ```python
-from google.adk.plugins import ReflectAndRetryPlugin
+from google.adk.runners import InMemoryRunner
+# <!-- VERIFY: exact import path and constructor args for the
+#      reflect-and-retry plugin in your ADK version. -->
+# from google.adk.plugins.reflect_and_retry_tool_plugin import (
+#     ReflectAndRetryToolPlugin,
+# )
 
-agent = Agent(
-    name="resilient_agent",
-    model="gemini-2.5-flash",
-    instruction="Perform data lookups using the available tools.",
-    tools=[database_query, api_lookup],
+runner = InMemoryRunner(
+    agent=root_agent,
+    app_name="resilient_app",
     plugins=[
-        ReflectAndRetryPlugin(
-            max_retries=3,  # Maximum retry attempts
-        )
+        # ReflectAndRetryToolPlugin(max_retries=3),
     ],
 )
 ```
@@ -998,35 +965,27 @@ agent = Agent(
 
 ### Creating Custom Plugins
 
+Custom plugins subclass `BasePlugin` and are registered on the Runner.
+
 ```python
-from google.adk.plugins import BasePlugin
+# <!-- VERIFY: exact BasePlugin import path and hook method names
+#      for your ADK version. Plugins build on the callback system and
+#      are registered at runner construction time, not on the Agent. -->
+from google.adk.plugins.base_plugin import BasePlugin
+from google.adk.runners import InMemoryRunner
 
 
-class LoggingPlugin(BasePlugin):
-    """Plugin that logs all tool calls."""
+class CountInvocationPlugin(BasePlugin):
+    """Example plugin that counts invocations."""
 
-    async def on_before_tool_call(self, tool_call, context):
-        print(f"[LOG] Calling tool: {tool_call.name}")
-        print(f"[LOG] Arguments: {tool_call.args}")
-        return tool_call  # Return unmodified (or modify)
-
-    async def on_after_tool_call(self, tool_call, result, context):
-        print(f"[LOG] Tool result: {result}")
-        return result  # Return unmodified (or modify)
-
-    async def on_before_model_call(self, messages, context):
-        print(f"[LOG] Sending {len(messages)} messages to model")
-        return messages
-
-    async def on_after_model_call(self, response, context):
-        print(f"[LOG] Model response received")
-        return response
+    def __init__(self):
+        self.count = 0
 
 
-agent = Agent(
-    name="logged_agent",
-    model="gemini-2.5-flash",
-    plugins=[LoggingPlugin()],
+runner = InMemoryRunner(
+    agent=root_agent,
+    app_name="logged_app",
+    plugins=[CountInvocationPlugin()],
 )
 ```
 

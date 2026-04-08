@@ -74,7 +74,7 @@ from google.adk.agents import SequentialAgent
 
 root_agent = SequentialAgent(
     name="pipeline",
-    agents=[step1_agent, step2_agent, step3_agent]
+    sub_agents=[step1_agent, step2_agent, step3_agent]
 )
 ```
 
@@ -86,7 +86,7 @@ from google.adk.agents import ParallelAgent
 
 root_agent = ParallelAgent(
     name="gatherer",
-    agents=[weather_agent, news_agent, stocks_agent]
+    sub_agents=[weather_agent, news_agent, stocks_agent]
 )
 ```
 
@@ -96,11 +96,12 @@ Repeat until condition met. Use for iterative processing.
 ```python
 from google.adk.agents import LoopAgent
 
+# Loop stops when any sub-agent sets tool_context.actions.escalate = True,
+# or when max_iterations is reached.
 root_agent = LoopAgent(
     name="batch_processor",
-    agent=processing_agent,
+    sub_agents=[processing_agent],
     max_iterations=100,
-    termination_condition=should_continue
 )
 ```
 
@@ -144,7 +145,7 @@ from google.genai import types
 
 agent = Agent(
     name="thinker",
-    model="gemini-2.5-pro-preview-03-25",
+    model="gemini-2.5-pro",
     planner=BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
             include_thoughts=True,
@@ -217,7 +218,7 @@ root_agent = Agent(
     - Billing questions → billing agent
     - Technical issues → technical agent
     - General questions → handle yourself""",
-    tools=[billing_agent, technical_agent]
+    sub_agents=[billing_agent, technical_agent]
 )
 ```
 
@@ -230,7 +231,7 @@ root_agent = Agent(
     1. Use researcher to gather information
     2. Use writer to create content
     3. Use reviewer to improve quality""",
-    tools=[research_agent, writer_agent, reviewer_agent]
+    sub_agents=[research_agent, writer_agent, reviewer_agent]
 )
 ```
 
@@ -243,7 +244,7 @@ router = Agent(
     - billing_agent for payments, invoices
     - support_agent for technical help
     - sales_agent for product info""",
-    tools=[billing_agent, support_agent, sales_agent]
+    sub_agents=[billing_agent, support_agent, sales_agent]
 )
 ```
 
@@ -251,7 +252,7 @@ router = Agent(
 ```python
 root_agent = SequentialAgent(
     name="pipeline",
-    agents=[input_validator, data_processor, output_formatter]
+    sub_agents=[input_validator, data_processor, output_formatter]
 )
 ```
 
@@ -259,7 +260,7 @@ root_agent = SequentialAgent(
 ```python
 gather = ParallelAgent(
     name="gather",
-    agents=[source1_agent, source2_agent, source3_agent]
+    sub_agents=[source1_agent, source2_agent, source3_agent]
 )
 process = Agent(
     name="processor",
@@ -268,7 +269,7 @@ process = Agent(
 )
 root_agent = SequentialAgent(
     name="workflow",
-    agents=[gather, process]
+    sub_agents=[gather, process]
 )
 ```
 
@@ -282,7 +283,7 @@ root_agent = Agent(
     - Never share personal data
     - If unsure, ask for clarification""",
     instruction="Your specific task...",
-    tools=[sub_agent1, sub_agent2]
+    sub_agents=[sub_agent1, sub_agent2]
 )
 ```
 
@@ -364,13 +365,13 @@ main_agent = Agent(
 
 ```bash
 # Web UI (interactive development)
-adk web run
+adk web .
 
 # CLI chat (terminal)
-adk run
+adk run ./my_agent
 
 # API server (programmatic access)
-adk api run --port 8000
+adk api_server --port 8000 .
 ```
 
 ### Programmatic Execution

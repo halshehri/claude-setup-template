@@ -188,18 +188,18 @@ GOOGLE_CLOUD_LOCATION=us-central1
 
 1. **Web Interface** (Interactive Dev UI)
 ```bash
-adk web run
-# Opens browser at http://localhost:8080
+adk web <agents_directory>   # e.g., adk web .
+# Opens browser at http://localhost:8000
 ```
 
 2. **Command Line** (Terminal chat)
 ```bash
-adk run
+adk run <agent_directory>    # e.g., adk run ./my_agent
 ```
 
 3. **API Server** (Programmatic access)
 ```bash
-adk api run
+adk api_server <agents_directory>   # e.g., adk api_server .
 # Starts server at http://localhost:8000
 ```
 
@@ -267,8 +267,8 @@ model="gemini-2.5-flash"
 # More capable, slower
 model="gemini-2.5-pro"
 
-# Thinking/reasoning model
-model="gemini-2.5-pro-preview-03-25"
+# Thinking/reasoning model (use gemini-2.5-pro with a planner)
+model="gemini-2.5-pro"
 
 # Claude (via Anthropic)
 model="claude-sonnet-4-20250514"
@@ -472,13 +472,13 @@ ADK_LOG_LEVEL=INFO
 
 ```bash
 # Start dev UI
-adk web run
+adk web .
 
 # CLI chat
-adk run
+adk run ./my_agent
 
 # API server
-adk api run --port 8000
+adk api_server --port 8000 .
 
 # Check installation
 pip show google-adk

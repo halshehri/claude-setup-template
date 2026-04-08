@@ -396,7 +396,7 @@ Extracted info: {extracted_data}
 # Pipeline: extractor -> formatter
 root_agent = SequentialAgent(
     name="pipeline",
-    agents=[extractor, formatter]
+    sub_agents=[extractor, formatter]
 )
 ```
 
@@ -414,7 +414,7 @@ summarizer = Agent(
 )
 # After execution: state["summary"] = "The agent's text response..."
 
-# With output_schema (structured output stored as JSON string)
+# With output_schema (structured output stored as a parsed dict)
 from pydantic import BaseModel
 
 class Analysis(BaseModel):
@@ -429,7 +429,9 @@ analyzer = Agent(
     output_schema=Analysis,
     output_key="analysis_result"
 )
-# After execution: state["analysis_result"] = '{"sentiment": "positive", ...}'
+# After execution, state["analysis_result"] holds the parsed structured
+# output as a dict (not a JSON string), e.g.:
+#   {"sentiment": "positive", "confidence": 0.93, "keywords": [...]}
 ```
 
 **Scoped output_key:**
@@ -504,22 +506,29 @@ from google.adk.memory import InMemoryMemoryService
 memory_service = InMemoryMemoryService()
 ```
 
-#### VertexAiRagMemoryService
+#### VertexAiMemoryBankService
 
-**Use for**: Production on Google Cloud. Uses Vertex AI RAG Engine for semantic search over memories.
+**Use for**: Production on Google Cloud. Uses Vertex AI Agent Engine's
+Memory Bank for managed long-term memory.
 
 ```python
-from google.adk.memory import VertexAiRagMemoryService
+from google.adk.memory import VertexAiMemoryBankService
 
-memory_service = VertexAiRagMemoryService(
-    rag_corpus="projects/my-project/locations/us-central1/ragCorpora/my-corpus"
+memory_service = VertexAiMemoryBankService(
+    project="my-project",
+    location="us-central1",
+    agent_engine_id="YOUR_AGENT_ENGINE_ID",
 )
 ```
 
 **Setup requirements:**
-1. Create a RAG corpus in Vertex AI
+1. Create a Vertex AI Agent Engine and note its ID
 2. Enable the Vertex AI API
 3. Set appropriate IAM permissions
+
+<!-- VERIFY: earlier drafts referenced VertexAiRagMemoryService(rag_corpus=...).
+     The current ADK memory service on Vertex AI is VertexAiMemoryBankService
+     and takes project/location/agent_engine_id. -->
 
 ### Memory Configuration
 
@@ -702,7 +711,7 @@ Handle the user's current request.""",
 
 pipeline = SequentialAgent(
     name="efficient_pipeline",
-    agents=[summarize_step, work_step]
+    sub_agents=[summarize_step, work_step]
 )
 ```
 
