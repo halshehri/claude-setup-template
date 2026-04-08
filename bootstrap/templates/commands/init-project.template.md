@@ -1,5 +1,6 @@
 ---
 description: Initialize Claude Code setup for a new or existing project
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 ---
 
 # Initialize Project

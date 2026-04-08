@@ -1,6 +1,7 @@
 ---
 name: react-frontend
 description: Apply React and frontend development standards when building user interfaces, components, or client-side features. Use when working with React, Vue, or frontend applications.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # React / Frontend Development Standards

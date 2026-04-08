@@ -1,5 +1,6 @@
 ---
 description: Generate a summary report of recent implementation work
+allowed-tools: Read, Glob, Grep, Bash(git log:*), Bash(git diff:*), Bash(git status:*), Write
 ---
 
 # Execution Report

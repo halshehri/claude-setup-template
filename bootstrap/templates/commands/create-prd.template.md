@@ -1,5 +1,7 @@
 ---
 description: Create or update the Product Requirements Document
+argument-hint: "[topic]"
+allowed-tools: Read, Write, Edit, Glob, Grep
 ---
 
 # Create PRD

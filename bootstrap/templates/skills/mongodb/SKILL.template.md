@@ -1,6 +1,7 @@
 ---
 name: mongodb
 description: Apply MongoDB best practices when writing queries, designing schemas, or working with document databases. Use when working with MongoDB or Mongoose.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # MongoDB Best Practices

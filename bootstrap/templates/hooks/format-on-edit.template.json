@@ -1,0 +1,16 @@
+{
+  "_comment": "Merge into settings.json under `hooks`. Runs formatter after Claude edits/writes a file. Hooks receive a JSON payload on stdin — we use jq to extract tool_input.file_path. Replace {{FORMAT_COMMAND}} with your project's formatter (prettier, black, gofmt, rustfmt). Requires `jq` on PATH. POSIX shell assumed; on Windows use Git Bash or WSL.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); [ -n \"$f\" ] && {{FORMAT_COMMAND}} \"$f\" >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ]
+  }
+}

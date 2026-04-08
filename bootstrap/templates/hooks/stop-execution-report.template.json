@@ -1,0 +1,15 @@
+{
+  "_comment": "Merge into settings.json under `hooks`. On session stop, append a brief summary of changes to .agents/reports/session-log.md. POSIX shell assumed; on Windows use Git Bash or WSL.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p .agents/reports && { echo \"# Session $(date -u +%Y-%m-%dT%H:%M:%SZ)\"; git status --short; echo; git diff --stat; echo; } >> .agents/reports/session-log.md"
+          }
+        ]
+      }
+    ]
+  }
+}

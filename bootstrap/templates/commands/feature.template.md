@@ -1,5 +1,7 @@
 ---
 description: Track feature progress through requirement → design → implementation → testing → merged
+argument-hint: "<feature-name>"
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # Feature Tracker

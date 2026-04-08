@@ -1,13 +1,26 @@
 ---
 name: google-adk
 description: Apply Google ADK patterns when building AI agents. Use when creating agent.py files, configuring multi-agent systems, defining tools, or working with ADK project structure.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch
 ---
 
 # Google ADK Development
 
 Apply these patterns when building agents with Google's Agent Development Kit (ADK).
 
-For deep reference on specific topics, see `.claude/reference/adk/`.
+## Reference index — read on demand
+
+The `reference/` folder beside this SKILL.md contains deep documentation. Read only the file relevant to the current task:
+
+| When you need... | Read |
+|---|---|
+| Project layout, env vars, first agent | `reference/fundamentals.md` |
+| Agent types (LlmAgent, Sequential, Parallel, Loop) | `reference/agents.md` |
+| Built-in tools and tool patterns | `reference/tools.md` |
+| Building custom Python/TypeScript tools | `reference/custom-tools.md` |
+| Sessions, state, memory services | `reference/memory.md` |
+| Running agents, deployment, Vertex AI | `reference/runtime-deploy.md` |
+| Planners, code execution, callbacks | `reference/advanced.md` |
 
 ## Project Structure
 
@@ -451,4 +464,4 @@ ADK_LOG_LEVEL=INFO
 - [Python Quickstart](https://google.github.io/adk-docs/get-started/python/)
 - [Agent Types](https://google.github.io/adk-docs/agents/)
 - [Multi-Agent Systems](https://google.github.io/adk-docs/agents/multi-agents/)
-- Deep reference: `.claude/reference/adk/`
+- Deep reference: `reference/` folder beside this SKILL.md

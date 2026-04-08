@@ -1,5 +1,7 @@
 ---
 description: Run validation checks (tests, lint, build) for specified services
+argument-hint: "[service-names]"
+allowed-tools: Read, Glob, Grep, Bash
 ---
 
 # Validate: Run Comprehensive Checks

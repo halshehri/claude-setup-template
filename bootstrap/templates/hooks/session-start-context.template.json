@@ -1,0 +1,15 @@
+{
+  "_comment": "Merge into settings.json under `hooks`. Loads recent git activity into context at the start of each session. POSIX shell assumed; on Windows use Git Bash or WSL.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '## Recent commits'; git log --oneline -10; echo; echo '## Working tree'; git status --short"
+          }
+        ]
+      }
+    ]
+  }
+}

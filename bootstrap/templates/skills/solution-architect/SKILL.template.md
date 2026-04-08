@@ -1,6 +1,7 @@
 ---
 name: solution-architect
 description: Apply solution architecture thinking when designing systems, making technical decisions, evaluating trade-offs, or planning features. Use when discussing architecture, system design, or technical strategy.
+allowed-tools: Read, Glob, Grep, WebFetch
 ---
 
 # Solution Architecture Expertise

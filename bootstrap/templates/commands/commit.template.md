@@ -1,5 +1,6 @@
 ---
 description: Create a well-formatted conventional git commit
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Read
 ---
 
 # Commit: Create Git Commit

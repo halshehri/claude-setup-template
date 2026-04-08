@@ -1,5 +1,6 @@
 ---
 description: Perform pre-commit code review on staged or modified changes
+allowed-tools: Read, Glob, Grep, Bash(git diff:*), Bash(git status:*)
 ---
 
 # Code Review: Pre-Commit Quality Check

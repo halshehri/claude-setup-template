@@ -1,0 +1,30 @@
+{
+  "_comment": "Project-scoped MCP servers. Copy to repo root as .mcp.json and uncomment the servers you need. Secrets must come from env vars, never hardcoded. Note: Claude Code already has built-in Read/Glob/Grep — only add the filesystem server if you need MCP-style access from another client.",
+  "mcpServers": {
+    "_filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    },
+    "_github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "_postgres": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "${DATABASE_URL}"]
+    },
+    "_sentry": {
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer ${SENTRY_TOKEN}"
+      }
+    }
+  }
+}

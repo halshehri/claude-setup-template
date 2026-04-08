@@ -1,5 +1,6 @@
 ---
 description: Automatically fix issues identified in code review
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash
 ---
 
 # Code Review Fix

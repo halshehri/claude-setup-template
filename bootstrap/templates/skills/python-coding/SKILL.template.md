@@ -1,6 +1,7 @@
 ---
 name: python-coding
 description: Apply Python coding standards when writing backend code, APIs, or scripts. Use when implementing features in Python services, FastAPI, Django, or Flask applications.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # Python Coding Standards

@@ -24,14 +24,16 @@ claude-setup-template/
     ├── SKILL.md                    # Bootstrap orchestration skill (entry point)
     ├── questions.md                # Question flow for project discovery
     └── templates/
-        ├── skills/                 # Tech stack skill templates
-        │   ├── solution-architect.template.md
-        │   ├── nodejs-coding.template.md
-        │   ├── python-coding.template.md
-        │   ├── react-frontend.template.md
-        │   ├── postgres.template.md
-        │   ├── mongodb.template.md
-        │   └── google-adk.template.md
+        ├── skills/                 # Folder-based skills (SKILL.template.md inside)
+        │   ├── solution-architect/SKILL.template.md
+        │   ├── nodejs-coding/SKILL.template.md
+        │   ├── python-coding/SKILL.template.md
+        │   ├── react-frontend/SKILL.template.md
+        │   ├── postgres/SKILL.template.md
+        │   ├── mongodb/SKILL.template.md
+        │   └── google-adk/
+        │       ├── SKILL.template.md
+        │       └── reference/      # 7 deep-dive files loaded on demand
         ├── agents/                 # Agent definition templates
         │   ├── senior-architect.template.md
         │   └── fullstack-engineer.template.md
@@ -56,17 +58,21 @@ claude-setup-template/
         │   ├── root-monorepo.template.md
         │   ├── root-multirepo.template.md
         │   └── service.template.md
-        ├── reference/              # Deep reference documentation
-        │   └── adk/                # Google ADK reference files
-        │       ├── adk-fundamentals.md
-        │       ├── adk-agents.md
-        │       ├── adk-tools.md
-        │       ├── adk-custom-tools.md
-        │       ├── adk-memory.md
-        │       ├── adk-runtime-deploy.md
-        │       ├── adk-advanced.md
-        │       └── STATUS.md
+        ├── settings/               # settings.json template
+        │   └── settings.local.template.json
+        ├── hooks/                  # Hook fragments to merge into settings.json
+        │   ├── format-on-edit.template.json
+        │   ├── block-secrets.template.json
+        │   ├── session-start-context.template.json
+        │   ├── auto-validate.template.json
+        │   └── stop-execution-report.template.json
+        ├── mcp/                    # .mcp.json template
+        │   └── .mcp.template.json
         └── gitignore.template      # .gitignore template for target projects
+
+.claude-plugin/                     # Plugin packaging (installable via `claude plugin install`)
+├── plugin.json
+└── marketplace.json
 ```
 
 ## How Bootstrap Works
@@ -81,9 +87,12 @@ The process is driven by `bootstrap/SKILL.md` (5 phases):
 
 ## Template Conventions
 
-- **Skills** (`skills/*.template.md`): YAML frontmatter with `name` + `description`, auto-applied by Claude when relevant
-- **Commands** (`commands/*.template.md`): YAML frontmatter with `description`, invoked via `/command-name`
-- **Agents** (`agents/*.template.md`): YAML frontmatter with `name`, `description`, `model`, `color`
+- **Skills** (`skills/{name}/SKILL.template.md`): folder-based, frontmatter `name` + `description` + `allowed-tools`; auto-applied by Claude when relevant. Drop additional `.md` files alongside for progressive disclosure.
+- **Commands** (`commands/*.template.md`): YAML frontmatter with `description` (also supports `argument-hint`, `allowed-tools`, `model`); invoked via `/command-name`
+- **Agents** (`agents/*.template.md`): YAML frontmatter with `name`, `description`, `model`, `tools`, optional `color`
+- **Hooks** (`hooks/*.template.json`): JSON fragments merged into the target's `settings.json` under the `hooks` key
+- **MCP** (`mcp/.mcp.template.json`): copied to target repo root as `.mcp.json`
+- **Settings** (`settings/settings.local.template.json`): copied to `.claude/settings.local.json`
 - **Reference files** (`reference/`): Not auto-loaded; read on-demand for deep knowledge
 - All templates use `{{VARIABLE}}` syntax for substitution during generation
 
@@ -96,8 +105,12 @@ The process is driven by `bootstrap/SKILL.md` (5 phases):
 ## File Counts
 
 - 13 command templates in `bootstrap/templates/commands/`
-- 7 skill templates in `bootstrap/templates/skills/`
+- 7 skill templates in `bootstrap/templates/skills/` (folder-based)
 - 2 agent templates in `bootstrap/templates/agents/`
 - 3 CLAUDE.md templates in `bootstrap/templates/claude-md/`
-- 8 ADK reference files in `bootstrap/templates/reference/adk/`
+- 7 ADK reference files in `bootstrap/templates/skills/google-adk/reference/` (progressive disclosure)
+- 5 hook templates in `bootstrap/templates/hooks/`
+- 1 settings template in `bootstrap/templates/settings/`
+- 1 MCP template in `bootstrap/templates/mcp/`
 - 1 gitignore template
+- Plugin manifest at `.claude-plugin/`

@@ -1,5 +1,7 @@
 ---
 description: Implement a bug fix based on RCA findings
+argument-hint: "<rca-file>"
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # Implement Fix

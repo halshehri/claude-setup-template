@@ -1,5 +1,7 @@
 ---
 description: Execute an implementation plan task by task with validation
+argument-hint: "[plan-file]"
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # Execute: Implement from Plan

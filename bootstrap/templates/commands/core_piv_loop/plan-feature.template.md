@@ -1,5 +1,7 @@
 ---
 description: Create a comprehensive implementation plan for a feature
+argument-hint: "<feature-description>"
+allowed-tools: Read, Write, Glob, Grep
 ---
 
 # Plan Feature

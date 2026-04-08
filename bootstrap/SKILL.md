@@ -102,7 +102,7 @@ Based on collected information, generate files from templates in `bootstrap/temp
 | Google ADK | `google-adk` |
 | Always | `solution-architect` |
 
-**Reference Files** - For Google ADK, also copy `reference/adk/` to `.claude/reference/adk/` for deep reference documentation.
+**Reference Files** - For Google ADK, the deep reference docs ship inside the skill folder (`templates/skills/google-adk/reference/`) and are copied with the skill — no separate handling needed.
 
 **Agents** - Always generate:
 - `senior-architect.md` (Opus model, assigned: solution-architect skill + relevant tech skills)
@@ -162,11 +162,25 @@ After generating files:
 
 All templates are in `bootstrap/templates/`:
 
-- `skills/` - Skill templates (*.template.md)
+- `skills/` - Folder-based skills: `skills/{name}/SKILL.template.md` with `allowed-tools` frontmatter (generated to `.claude/skills/{name}/SKILL.md`)
 - `agents/` - Agent templates
 - `commands/` - Command templates
 - `claude-md/` - CLAUDE.md templates
 - `reference/` - Reference documentation templates (e.g., `reference/adk/`)
+- `settings/` - settings.json template (permissions, env, model)
+- `hooks/` - Hook fragments to merge into settings.json (format-on-edit, block-secrets, session-start-context, auto-validate, stop-execution-report)
+- `mcp/` - `.mcp.json` template with commented filesystem/github/postgres/sentry servers
+
+## Plugin Distribution
+
+This repo is also packaged as a Claude Code plugin via `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`. Users can install it with `claude plugin install` instead of cloning.
+
+## Phase 3b: Harness Configuration
+
+After generating skills/agents/commands, also offer to install:
+1. **settings.json** — copy from `templates/settings/settings.local.template.json`, substitute `{{TEST_COMMAND}}`, `{{BUILD_COMMAND}}`, `{{LINT_COMMAND}}`
+2. **Hooks** — ask which hooks to enable; merge selected fragments from `templates/hooks/` into `settings.json` under the `hooks` key
+3. **MCP servers** — ask which external systems to wire (github, postgres, sentry, filesystem); copy `templates/mcp/.mcp.template.json` to `.mcp.json` and uncomment chosen servers
 
 ## Variable Substitution
 

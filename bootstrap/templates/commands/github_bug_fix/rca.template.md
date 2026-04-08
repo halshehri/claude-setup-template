@@ -1,5 +1,7 @@
 ---
 description: Perform root cause analysis on a GitHub issue or bug report
+argument-hint: "<issue-number-or-url>"
+allowed-tools: Read, Write, Glob, Grep, Bash(gh issue view:*), Bash(gh issue list:*), Bash(git log:*), Bash(git blame:*)
 ---
 
 # RCA: Root Cause Analysis

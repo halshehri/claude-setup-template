@@ -1,5 +1,7 @@
 ---
 description: Load project context for specified services before planning or implementing
+argument-hint: "[service-names]"
+allowed-tools: Read, Glob, Grep, Bash(git status:*), Bash(git log:*)
 ---
 
 # Prime: Load Project Context

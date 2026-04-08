@@ -1,6 +1,7 @@
 ---
 name: postgres
 description: Apply PostgreSQL best practices when writing queries, designing schemas, or optimizing database operations. Use when working with PostgreSQL databases.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # PostgreSQL Best Practices

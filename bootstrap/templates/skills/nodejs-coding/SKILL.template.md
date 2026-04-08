@@ -1,6 +1,7 @@
 ---
 name: nodejs-coding
 description: Apply Node.js and TypeScript coding standards when writing backend code, APIs, or server-side JavaScript. Use when implementing features in Node.js services.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # Node.js / TypeScript Coding Standards
