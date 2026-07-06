@@ -100,7 +100,7 @@ Based on collected information, generate files from templates in `bootstrap/temp
 | PostgreSQL | `postgres` |
 | MongoDB | `mongodb` |
 | Google ADK | `google-adk` |
-| Always | `solution-architect` |
+| Always | `solution-architect`, `verification-before-completion` |
 
 **Reference Files** - For Google ADK, the deep reference docs ship inside the skill folder (`templates/skills/google-adk/reference/`) and are copied with the skill — no separate handling needed.
 

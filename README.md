@@ -40,6 +40,7 @@ your-project/
 │   │   └── commit.md             # Git commits
 │   ├── skills/                   # Domain expertise (auto-applied)
 │   │   ├── solution-architect/   # Architecture thinking
+│   │   ├── verification-before-completion/ # Evidence before "done" claims
 │   │   ├── nodejs-coding/        # Node.js patterns (if applicable)
 │   │   ├── python-coding/        # Python patterns (if applicable)
 │   │   ├── react-frontend/       # React patterns (if applicable)
@@ -129,6 +130,7 @@ After setup, these slash commands are available:
 ### Skills (Auto-Applied)
 Claude automatically applies skills when relevant:
 - `solution-architect` - When designing systems
+- `verification-before-completion` - Before any "done"/"passing" claim: run the command, read the output, then claim
 - `nodejs-coding` - When writing Node.js code
 - `postgres` - When working with PostgreSQL
 
