@@ -515,22 +515,34 @@ Use `/core_piv_loop:plan-feature "{description}"` to create an implementation pl
 
 #### `.claude/commands/core_piv_loop/plan-feature.md`
 
-```markdown
+`````markdown
 ---
-description: Create a comprehensive implementation plan for a feature
+description: Create a spec-driven implementation plan for a feature
 ---
 
 # Plan Feature
 
-Transform a feature request into a comprehensive implementation plan.
+Transform a feature request into a complete, executable implementation plan.
 
 ## Arguments
+
 `$ARGUMENTS` - Feature description (required)
 
 ## Core Principle
-**No code in this phase.** Create a context-rich plan that enables single-pass implementation.
+
+**No code changes in this phase.** The plan must be complete enough that an implementer with zero context — who sees ONLY the plan — can execute it in a single pass. Every gap in the plan becomes a wrong guess during execution.
 
 ## Planning Process
+
+### Phase 0: Assumptions & Ambiguities (spec gate)
+
+Before any planning, make the spec explicit:
+
+1. Restate the request in one sentence.
+2. List every assumption you are making: scope, behavior, edge cases, non-goals.
+3. Flag anything interpretable two different ways. Pick the most likely reading and write it down explicitly.
+4. If a decision genuinely blocks planning, ask the user ONCE — all questions batched in a single message, never one at a time.
+5. **Unattended/autonomous runs:** do not ask. Record the assumption under the plan's `Assumptions` section and proceed. The assumption record is the audit trail.
 
 ### Phase 1: Feature Understanding
 - What core problem is being solved?
@@ -543,40 +555,45 @@ Determine which services this feature impacts and why.
 ### Phase 3: Codebase Analysis
 For each affected service:
 - Find similar implementations (patterns to follow)
-- Identify files to modify
-- Identify files to create
+- Identify files to modify and files to create
 - Note integration points between services
+- Note existing helpers/utils the implementation must reuse instead of re-writing
 
-### Phase 4: External Research (if needed)
-- Check documentation for libraries/frameworks
-- Research best practices for the pattern
-
-### Phase 5: Create Implementation Plan
+### Phase 4: Create Implementation Plan
 Save to: `.agents/plans/{kebab-case-feature-name}.md`
+
+## No Placeholders (hard rule)
+
+Every task must contain the actual content the implementer needs. These are **plan failures** — never write them:
+
+- "TBD", "TODO", "implement later", "fill in details"
+- "Add appropriate error handling" / "add validation" / "handle edge cases"
+- "Write tests for the above" without the actual test code
+- "Similar to Task N" — repeat the code; tasks may be read in isolation
+- Steps that describe what to do without showing the code (code blocks required for code steps)
+- References to types, functions, or methods not defined in any task
 
 ## Plan Template
 
-```markdown
+````markdown
 # Feature: {Feature Name}
 
-## Overview
-**Description**: {Detailed description}
+**Goal**: {One sentence describing what this builds}
 **Type**: {New Feature | Enhancement | Bug Fix | Refactor}
 **Created**: {date}
 
 ## User Story
-As a {user type},
-I want to {action},
-So that {benefit}.
+As a {user type}, I want to {action}, so that {benefit}.
+
+## Assumptions
+- {Every assumption made in Phase 0, including ambiguities resolved and the reading chosen}
+
+## Global Constraints
+{Project-wide requirements every task implicitly includes — version floors,
+naming conventions, platform requirements — one line each, exact values.}
 
 ## Affected Services
 - [ ] `{service1}` - {why affected}
-- [ ] `{service2}` - {why affected}
-
-## Prerequisites
-- [ ] {Any setup or dependencies needed}
-
----
 
 ## Context References
 
@@ -584,83 +601,67 @@ So that {benefit}.
 | File | Reason |
 |------|--------|
 | `{path}` | {Pattern to follow} |
-| `{path}` | {Integration point} |
-
-### Patterns to Follow
-{Specific code patterns observed in the codebase}
-
-### External Documentation
-- {Link to relevant docs}
 
 ---
 
 ## Implementation Tasks
 
-### Phase 1: {Service/Component Name}
+### Task 1.1: {ACTION} `{target_file}`
 
-#### Task 1.1: {ACTION} `{target_file}`
-**Type**: {Create | Modify}
-**Description**: {What to do}
+**Files**:
+- Create: `{exact/path/to/file}`
+- Modify: `{exact/path/to/existing}:{line-range}`
+- Test: `{exact/path/to/test}`
 
-**Implementation Details**:
-- {Specific detail}
-- {Specific detail}
+**Interfaces**:
+- Consumes: {what this task uses from earlier tasks — exact signatures}
+- Produces: {what later tasks rely on — exact function names, parameter and
+  return types. This block is how a task's implementer learns the names and
+  types neighboring tasks use.}
 
-**Pattern Reference**: `{file}:{line-range}`
-
-**Validation**:
-```bash
-{command to verify this task}
+**Implementation**:
+```{language}
+{The actual code or a complete skeleton with real names, signatures, and
+logic — not a description of code}
 ```
 
-#### Task 1.2: {ACTION} `{target_file}`
-...
+**Test**:
+```{language}
+{The actual test code}
+```
 
-### Phase 2: {Next Service/Component}
-...
+**Validation**: `{exact command}` → expected: `{expected output}`
 
 ---
 
 ## Validation Commands
-
-### Per-Service Validation
 ```bash
-# {service1}
 cd {service1} && npm test && npm run lint
-
-# {service2}
-cd {service2} && pytest
 ```
-
-### Integration Validation
-```bash
-{Commands to test integration}
-```
-
----
 
 ## Acceptance Criteria
 - [ ] {Criterion 1}
-- [ ] {Criterion 2}
 - [ ] All validation commands pass
-- [ ] Code reviewed with `/validation:code-review`
+````
 
----
+## Self-Review (before handing off)
 
-## Rollback Plan
-{How to undo if something goes wrong}
+Look at the plan with fresh eyes and check:
 
-## Notes
-{Any additional context or decisions made}
-```
+1. **Spec coverage**: Can you point to a task for each requirement and each recorded assumption? Add tasks for any gaps.
+2. **Placeholder scan**: Search the plan for the red flags in "No Placeholders" above. Fix them.
+3. **Type consistency**: Do names and signatures used in later tasks match what earlier tasks define? `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+
+Fix issues inline, then move on. No re-review needed.
 
 ## After Creating Plan
+
 Inform user: "Plan created at `.agents/plans/{name}.md`. Review it, then run `/core_piv_loop:execute .agents/plans/{name}.md`"
-```
+`````
 
 #### `.claude/commands/core_piv_loop/execute.md`
 
-```markdown
+`````markdown
 ---
 description: Execute an implementation plan task by task with validation
 ---
@@ -670,17 +671,33 @@ description: Execute an implementation plan task by task with validation
 Execute an implementation plan created by `/core_piv_loop:plan-feature`.
 
 ## Arguments
+
 `$ARGUMENTS` - Path to plan file (e.g., `.agents/plans/add-user-auth.md`)
 
-## Pre-Execution Checklist
-- [ ] Plan file exists and is readable
-- [ ] User has reviewed and approved the plan
-- [ ] On correct git branch
+## Coding Rules: Minimal Code That Works
+
+Before writing any code, climb this ladder and stop at the first rung that holds:
+
+1. **Does this need to exist at all?** Speculative need = skip it, note it in the report. (YAGNI)
+2. **Already in this codebase?** A helper, util, type, or pattern that already lives here → reuse it. Look before you write.
+3. **Standard library covers it?** Use it.
+4. **Native platform feature covers it?** DB constraint over app code, CSS over JS.
+5. **Already-installed dependency solves it?** Use it. Never add a new dependency for what a few lines can do.
+6. **Can it be one line?** One line.
+7. **Only then:** the minimum code that works.
+
+Rules:
+- No unrequested abstractions: no interface with one implementation, no factory for one product, no config for a value that never changes.
+- Bug fix = root cause, not symptom: one guard in the shared function beats a guard in every caller.
+- Deletion over addition. Boring over clever.
+- Never simplify away: input validation at trust boundaries, error handling that prevents data loss, security measures, or anything the plan explicitly requires.
+- **Test policy: the plan's validation commands govern.** The ladder shrinks production code, never the validation loop.
 
 ## Execution Process
 
 ### 1. Load Plan
 - Read the ENTIRE plan file
+- Read the `Assumptions` and `Global Constraints` sections first — every task implicitly includes them
 - Parse affected services
 - Note validation commands
 
@@ -691,25 +708,37 @@ For each affected service, read:
 
 ### 3. Execute Tasks Sequentially
 For each task in the plan:
-1. Read the task specification
+1. Read the task specification, including its `Interfaces` block
 2. Read pattern reference files
-3. Implement the change
-4. Run task's validation command
+3. Implement the change (apply the ladder above)
+4. Run task's validation command and confirm the expected output
 5. Fix any issues before proceeding
-6. Mark task complete in your tracking
 
 ### 4. Per-Phase Validation
-After completing each phase:
-```bash
-cd {service} && npm test  # or appropriate test command
-```
+After completing each phase, run service tests.
 
 ### 5. Final Validation
 Run all validation commands from the plan.
 
+### 6. Fresh-Eyes Review
+Dispatch ONE review subagent with fresh context (no session history) to run
+`/validation:code-review` against the full diff, with the plan file as its
+spec. One fresh-context pass at the end catches the drift that accumulates
+during long implementation sessions.
+
+- Fix all Critical issues it reports, then re-run final validation
+- Log Warnings in the execution report; fix them only if cheap
+
+### 7. Verify Before Claiming Done
+Apply the `verification-before-completion` skill: no completion claims
+without fresh verification evidence. Run each validation command, read the
+full output, and report the actual state — especially in unattended runs,
+where the report is the only witness.
+
 ## Error Handling
 - If a task fails validation, fix before proceeding
 - If blocked, document the blocker and ask user for guidance
+- In unattended runs: mark the task BLOCKED in the report, skip dependents, continue with independent tasks
 - Do not skip tasks without user approval
 
 ## Output Report
@@ -720,12 +749,13 @@ Run all validation commands from the plan.
 ### Summary
 - Plan: `{plan-path}`
 - Status: {Complete | Partial | Blocked}
-- Duration: {start to end}
 
 ### Completed Tasks
 - [x] Task 1.1: {description}
-- [x] Task 1.2: {description}
 - [ ] Task 2.1: {description} - {reason if incomplete}
+
+### Skipped as Unnecessary (ladder rung 1)
+- {anything the plan called for that turned out not to need to exist, and why}
 
 ### Files Created
 | File | Purpose |
@@ -735,21 +765,19 @@ Run all validation commands from the plan.
 ### Files Modified
 | File | Changes |
 |------|---------|
-| `{path}` | {summary of changes} |
+| `{path}` | {summary} |
 
 ### Validation Results
-```
-{output of validation commands}
-```
+{actual output of validation commands — fresh runs, not recalled}
 
-### Issues Encountered
-{Any problems and how they were resolved}
+### Review Findings
+- Critical: {n} found, {n} fixed
+- Warnings: {list, with fixed/deferred}
 
 ### Next Steps
-- [ ] Run `/validation:code-review`
 - [ ] Run `/commit`
 ```
-```
+`````
 
 #### `.claude/commands/validation/validate.md`
 

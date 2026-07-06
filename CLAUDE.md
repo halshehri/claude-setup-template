@@ -26,6 +26,7 @@ claude-setup-template/
     └── templates/
         ├── skills/                 # Folder-based skills (SKILL.template.md inside)
         │   ├── solution-architect/SKILL.template.md
+        │   ├── verification-before-completion/SKILL.template.md
         │   ├── nodejs-coding/SKILL.template.md
         │   ├── python-coding/SKILL.template.md
         │   ├── react-frontend/SKILL.template.md
@@ -105,7 +106,7 @@ The process is driven by `bootstrap/SKILL.md` (5 phases):
 ## File Counts
 
 - 13 command templates in `bootstrap/templates/commands/`
-- 7 skill templates in `bootstrap/templates/skills/` (folder-based)
+- 8 skill templates in `bootstrap/templates/skills/` (folder-based)
 - 2 agent templates in `bootstrap/templates/agents/`
 - 3 CLAUDE.md templates in `bootstrap/templates/claude-md/`
 - 7 ADK reference files in `bootstrap/templates/skills/google-adk/reference/` (progressive disclosure)
