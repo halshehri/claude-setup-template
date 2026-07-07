@@ -37,7 +37,8 @@ your-project/
 │   │   ├── core_piv_loop/        # Prime → Plan → Execute workflow
 │   │   ├── validation/           # Testing & code review
 │   │   ├── github_bug_fix/       # Bug investigation & fixes
-│   │   └── commit.md             # Git commits
+│   │   ├── commit.md             # Git commits
+│   │   └── refactor.md           # Post-development cleanup
 │   ├── skills/                   # Domain expertise (auto-applied)
 │   │   ├── solution-architect/   # Architecture thinking
 │   │   ├── verification-before-completion/ # Evidence before "done" claims
@@ -91,6 +92,7 @@ After setup, these slash commands are available:
 | `/validation:code-review` | Pre-commit code review |
 | `/github_bug_fix:rca` | Root cause analysis |
 | `/github_bug_fix:implement-fix` | Implement bug fix |
+| `/refactor` | Behavior-preserving refactor of a targeted area (post-development) |
 | `/commit` | Create conventional commit |
 | `/feature` | Track feature lifecycle (requirement → design → implementation → testing → merged) |
 

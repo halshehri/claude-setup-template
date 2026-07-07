@@ -1,6 +1,6 @@
 {
   "name": "claude-setup-template",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Bootstrap a Claude Code project: generates skills, agents, commands, hooks, MCP and settings tailored to your stack.",
   "author": {
     "name": "Hani Alshehri"
