@@ -52,6 +52,7 @@ claude-setup-template/
         │   │   ├── rca.template.md
         │   │   └── implement-fix.template.md
         │   ├── commit.template.md
+        │   ├── refactor.template.md
         │   ├── feature.template.md
         │   ├── init-project.template.md
         │   └── create-prd.template.md
@@ -105,7 +106,7 @@ The process is driven by `bootstrap/SKILL.md` (5 phases):
 
 ## File Counts
 
-- 13 command templates in `bootstrap/templates/commands/`
+- 14 command templates in `bootstrap/templates/commands/`
 - 8 skill templates in `bootstrap/templates/skills/` (folder-based)
 - 2 agent templates in `bootstrap/templates/agents/`
 - 3 CLAUDE.md templates in `bootstrap/templates/claude-md/`
