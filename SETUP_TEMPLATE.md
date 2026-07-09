@@ -559,6 +559,11 @@ For each affected service:
 - Note integration points between services
 - Note existing helpers/utils the implementation must reuse instead of re-writing
 
+### Phase 3b: External Research (conditional)
+Only if the plan touches an unfamiliar library, API, or pattern: check its
+documentation before writing task code. Skip this phase entirely for
+features built on familiar ground — it is not a standing ceremony.
+
 ### Phase 4: Create Implementation Plan
 Save to: `.agents/plans/{kebab-case-feature-name}.md`
 
@@ -572,6 +577,11 @@ Every task must contain the actual content the implementer needs. These are **pl
 - "Similar to Task N" — repeat the code; tasks may be read in isolation
 - Steps that describe what to do without showing the code (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
+
+**Uncertainty is not a placeholder license:** where genuine unknowns remain
+after Phase 3b, write a complete skeleton with real names and signatures and
+record the unknown as an `Assumptions` entry — never confident fiction that
+looks finished but was never verified.
 
 ## Plan Template
 
@@ -635,9 +645,23 @@ logic — not a description of code}
 ---
 
 ## Validation Commands
+
+### Per-Service
 ```bash
+# {service1}
 cd {service1} && npm test && npm run lint
 ```
+
+### Integration
+```bash
+{Commands that exercise the flow ACROSS services — the breakage per-service
+suites can't see}
+```
+
+## Rollback
+{How to undo if something goes wrong. Usually "revert commits for this
+plan"; be explicit about anything a revert alone won't fix — migrations,
+config changes, external state.}
 
 ## Acceptance Criteria
 - [ ] {Criterion 1}
@@ -718,7 +742,8 @@ For each task in the plan:
 After completing each phase, run service tests.
 
 ### 5. Final Validation
-Run all validation commands from the plan.
+Run all validation commands from the plan — per-service first, then
+integration.
 
 ### 6. Fresh-Eyes Review
 Dispatch ONE review subagent with fresh context (no session history) to run
@@ -739,6 +764,7 @@ where the report is the only witness.
 - If a task fails validation, fix before proceeding
 - If blocked, document the blocker and ask user for guidance
 - In unattended runs: mark the task BLOCKED in the report, skip dependents, continue with independent tasks
+- If final validation fails in an unattended run and cannot be fixed: execute the plan's `Rollback` section rather than leaving the tree half-changed, and record the rollback in the report
 - Do not skip tasks without user approval
 
 ## Output Report

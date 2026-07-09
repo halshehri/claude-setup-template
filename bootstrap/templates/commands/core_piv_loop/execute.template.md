@@ -56,7 +56,8 @@ For each task in the plan:
 After completing each phase, run service tests.
 
 ### 5. Final Validation
-Run all validation commands from the plan.
+Run all validation commands from the plan — per-service first, then
+integration.
 
 ### 6. Fresh-Eyes Review
 Dispatch ONE review subagent with fresh context (no session history) to run
@@ -77,6 +78,7 @@ where the report is the only witness.
 - If a task fails validation, fix before proceeding
 - If blocked, document the blocker and ask user for guidance
 - In unattended runs: mark the task BLOCKED in the report, skip dependents, continue with independent tasks
+- If final validation fails in an unattended run and cannot be fixed: execute the plan's `Rollback` section rather than leaving the tree half-changed, and record the rollback in the report
 - Do not skip tasks without user approval
 
 ## Output Report
