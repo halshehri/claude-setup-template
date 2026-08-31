@@ -75,7 +75,6 @@ Based on collected information, generate files from templates in `bootstrap/temp
 │   │   │   ├── rca.md
 │   │   │   └── implement-fix.md
 │   │   ├── commit.md
-│   │   ├── refactor.md
 │   │   ├── feature.md
 │   │   ├── init-project.md
 │   │   └── create-prd.md
@@ -101,7 +100,7 @@ Based on collected information, generate files from templates in `bootstrap/temp
 | PostgreSQL | `postgres` |
 | MongoDB | `mongodb` |
 | Google ADK | `google-adk` |
-| Always | `solution-architect`, `verification-before-completion` |
+| Always | `solution-architect` |
 
 **Reference Files** - For Google ADK, the deep reference docs ship inside the skill folder (`templates/skills/google-adk/reference/`) and are copied with the skill — no separate handling needed.
 
@@ -156,7 +155,6 @@ After generating files:
    - /core_piv_loop:prime - Load project context
    - /core_piv_loop:plan-feature - Plan a feature
    - /validation:validate - Run validation
-   - /refactor - Behavior-preserving cleanup of a targeted area (post-development)
    - /commit - Create git commit
    ```
 

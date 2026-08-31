@@ -37,11 +37,9 @@ your-project/
 │   │   ├── core_piv_loop/        # Prime → Plan → Execute workflow
 │   │   ├── validation/           # Testing & code review
 │   │   ├── github_bug_fix/       # Bug investigation & fixes
-│   │   ├── commit.md             # Git commits
-│   │   └── refactor.md           # Post-development cleanup
+│   │   └── commit.md             # Git commits
 │   ├── skills/                   # Domain expertise (auto-applied)
 │   │   ├── solution-architect/   # Architecture thinking
-│   │   ├── verification-before-completion/ # Evidence before "done" claims
 │   │   ├── nodejs-coding/        # Node.js patterns (if applicable)
 │   │   ├── python-coding/        # Python patterns (if applicable)
 │   │   ├── react-frontend/       # React patterns (if applicable)
@@ -92,7 +90,6 @@ After setup, these slash commands are available:
 | `/validation:code-review` | Pre-commit code review |
 | `/github_bug_fix:rca` | Root cause analysis |
 | `/github_bug_fix:implement-fix` | Implement bug fix |
-| `/refactor` | Behavior-preserving refactor of a targeted area (post-development) |
 | `/commit` | Create conventional commit |
 | `/feature` | Track feature lifecycle (requirement → design → implementation → testing → merged) |
 
@@ -132,7 +129,6 @@ After setup, these slash commands are available:
 ### Skills (Auto-Applied)
 Claude automatically applies skills when relevant:
 - `solution-architect` - When designing systems
-- `verification-before-completion` - Before any "done"/"passing" claim: run the command, read the output, then claim
 - `nodejs-coding` - When writing Node.js code
 - `postgres` - When working with PostgreSQL
 

@@ -515,34 +515,22 @@ Use `/core_piv_loop:plan-feature "{description}"` to create an implementation pl
 
 #### `.claude/commands/core_piv_loop/plan-feature.md`
 
-`````markdown
+```markdown
 ---
-description: Create a spec-driven implementation plan for a feature
+description: Create a comprehensive implementation plan for a feature
 ---
 
 # Plan Feature
 
-Transform a feature request into a complete, executable implementation plan.
+Transform a feature request into a comprehensive implementation plan.
 
 ## Arguments
-
 `$ARGUMENTS` - Feature description (required)
 
 ## Core Principle
-
-**No code changes in this phase.** The plan must be complete enough that an implementer with zero context — who sees ONLY the plan — can execute it in a single pass. Every gap in the plan becomes a wrong guess during execution.
+**No code in this phase.** Create a context-rich plan that enables single-pass implementation.
 
 ## Planning Process
-
-### Phase 0: Assumptions & Ambiguities (spec gate)
-
-Before any planning, make the spec explicit:
-
-1. Restate the request in one sentence.
-2. List every assumption you are making: scope, behavior, edge cases, non-goals.
-3. Flag anything interpretable two different ways. Pick the most likely reading and write it down explicitly.
-4. If a decision genuinely blocks planning, ask the user ONCE — all questions batched in a single message, never one at a time.
-5. **Unattended/autonomous runs:** do not ask. Record the assumption under the plan's `Assumptions` section and proceed. The assumption record is the audit trail.
 
 ### Phase 1: Feature Understanding
 - What core problem is being solved?
@@ -555,55 +543,40 @@ Determine which services this feature impacts and why.
 ### Phase 3: Codebase Analysis
 For each affected service:
 - Find similar implementations (patterns to follow)
-- Identify files to modify and files to create
+- Identify files to modify
+- Identify files to create
 - Note integration points between services
-- Note existing helpers/utils the implementation must reuse instead of re-writing
 
-### Phase 3b: External Research (conditional)
-Only if the plan touches an unfamiliar library, API, or pattern: check its
-documentation before writing task code. Skip this phase entirely for
-features built on familiar ground — it is not a standing ceremony.
+### Phase 4: External Research (if needed)
+- Check documentation for libraries/frameworks
+- Research best practices for the pattern
 
-### Phase 4: Create Implementation Plan
+### Phase 5: Create Implementation Plan
 Save to: `.agents/plans/{kebab-case-feature-name}.md`
-
-## No Placeholders (hard rule)
-
-Every task must contain the actual content the implementer needs. These are **plan failures** — never write them:
-
-- "TBD", "TODO", "implement later", "fill in details"
-- "Add appropriate error handling" / "add validation" / "handle edge cases"
-- "Write tests for the above" without the actual test code
-- "Similar to Task N" — repeat the code; tasks may be read in isolation
-- Steps that describe what to do without showing the code (code blocks required for code steps)
-- References to types, functions, or methods not defined in any task
-
-**Uncertainty is not a placeholder license:** where genuine unknowns remain
-after Phase 3b, write a complete skeleton with real names and signatures and
-record the unknown as an `Assumptions` entry — never confident fiction that
-looks finished but was never verified.
 
 ## Plan Template
 
-````markdown
+```markdown
 # Feature: {Feature Name}
 
-**Goal**: {One sentence describing what this builds}
+## Overview
+**Description**: {Detailed description}
 **Type**: {New Feature | Enhancement | Bug Fix | Refactor}
 **Created**: {date}
 
 ## User Story
-As a {user type}, I want to {action}, so that {benefit}.
-
-## Assumptions
-- {Every assumption made in Phase 0, including ambiguities resolved and the reading chosen}
-
-## Global Constraints
-{Project-wide requirements every task implicitly includes — version floors,
-naming conventions, platform requirements — one line each, exact values.}
+As a {user type},
+I want to {action},
+So that {benefit}.
 
 ## Affected Services
 - [ ] `{service1}` - {why affected}
+- [ ] `{service2}` - {why affected}
+
+## Prerequisites
+- [ ] {Any setup or dependencies needed}
+
+---
 
 ## Context References
 
@@ -611,81 +584,83 @@ naming conventions, platform requirements — one line each, exact values.}
 | File | Reason |
 |------|--------|
 | `{path}` | {Pattern to follow} |
+| `{path}` | {Integration point} |
+
+### Patterns to Follow
+{Specific code patterns observed in the codebase}
+
+### External Documentation
+- {Link to relevant docs}
 
 ---
 
 ## Implementation Tasks
 
-### Task 1.1: {ACTION} `{target_file}`
+### Phase 1: {Service/Component Name}
 
-**Files**:
-- Create: `{exact/path/to/file}`
-- Modify: `{exact/path/to/existing}:{line-range}`
-- Test: `{exact/path/to/test}`
+#### Task 1.1: {ACTION} `{target_file}`
+**Type**: {Create | Modify}
+**Description**: {What to do}
 
-**Interfaces**:
-- Consumes: {what this task uses from earlier tasks — exact signatures}
-- Produces: {what later tasks rely on — exact function names, parameter and
-  return types. This block is how a task's implementer learns the names and
-  types neighboring tasks use.}
+**Implementation Details**:
+- {Specific detail}
+- {Specific detail}
 
-**Implementation**:
-```{language}
-{The actual code or a complete skeleton with real names, signatures, and
-logic — not a description of code}
+**Pattern Reference**: `{file}:{line-range}`
+
+**Validation**:
+```bash
+{command to verify this task}
 ```
 
-**Test**:
-```{language}
-{The actual test code}
-```
+#### Task 1.2: {ACTION} `{target_file}`
+...
 
-**Validation**: `{exact command}` → expected: `{expected output}`
+### Phase 2: {Next Service/Component}
+...
 
 ---
 
 ## Validation Commands
 
-### Per-Service
+### Per-Service Validation
 ```bash
 # {service1}
 cd {service1} && npm test && npm run lint
+
+# {service2}
+cd {service2} && pytest
 ```
 
-### Integration
+### Integration Validation
 ```bash
-{Commands that exercise the flow ACROSS services — the breakage per-service
-suites can't see}
+{Commands to test integration}
 ```
 
-## Rollback
-{How to undo if something goes wrong. Usually "revert commits for this
-plan"; be explicit about anything a revert alone won't fix — migrations,
-config changes, external state.}
+---
 
 ## Acceptance Criteria
 - [ ] {Criterion 1}
+- [ ] {Criterion 2}
 - [ ] All validation commands pass
-````
+- [ ] Code reviewed with `/validation:code-review`
 
-## Self-Review (before handing off)
+---
 
-Look at the plan with fresh eyes and check:
+## Rollback Plan
+{How to undo if something goes wrong}
 
-1. **Spec coverage**: Can you point to a task for each requirement and each recorded assumption? Add tasks for any gaps.
-2. **Placeholder scan**: Search the plan for the red flags in "No Placeholders" above. Fix them.
-3. **Type consistency**: Do names and signatures used in later tasks match what earlier tasks define? `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
-
-Fix issues inline, then move on. No re-review needed.
+## Notes
+{Any additional context or decisions made}
+```
 
 ## After Creating Plan
-
 Inform user: "Plan created at `.agents/plans/{name}.md`. Review it, then run `/core_piv_loop:execute .agents/plans/{name}.md`"
-`````
+```
 
 #### `.claude/commands/core_piv_loop/execute.md`
 
-`````markdown
+```markdown
 ---
 description: Execute an implementation plan task by task with validation
 ---
@@ -695,33 +670,17 @@ description: Execute an implementation plan task by task with validation
 Execute an implementation plan created by `/core_piv_loop:plan-feature`.
 
 ## Arguments
-
 `$ARGUMENTS` - Path to plan file (e.g., `.agents/plans/add-user-auth.md`)
 
-## Coding Rules: Minimal Code That Works
-
-Before writing any code, climb this ladder and stop at the first rung that holds:
-
-1. **Does this need to exist at all?** Speculative need = skip it, note it in the report. (YAGNI)
-2. **Already in this codebase?** A helper, util, type, or pattern that already lives here → reuse it. Look before you write.
-3. **Standard library covers it?** Use it.
-4. **Native platform feature covers it?** DB constraint over app code, CSS over JS.
-5. **Already-installed dependency solves it?** Use it. Never add a new dependency for what a few lines can do.
-6. **Can it be one line?** One line.
-7. **Only then:** the minimum code that works.
-
-Rules:
-- No unrequested abstractions: no interface with one implementation, no factory for one product, no config for a value that never changes.
-- Bug fix = root cause, not symptom: one guard in the shared function beats a guard in every caller.
-- Deletion over addition. Boring over clever.
-- Never simplify away: input validation at trust boundaries, error handling that prevents data loss, security measures, or anything the plan explicitly requires.
-- **Test policy: the plan's validation commands govern.** The ladder shrinks production code, never the validation loop.
+## Pre-Execution Checklist
+- [ ] Plan file exists and is readable
+- [ ] User has reviewed and approved the plan
+- [ ] On correct git branch
 
 ## Execution Process
 
 ### 1. Load Plan
 - Read the ENTIRE plan file
-- Read the `Assumptions` and `Global Constraints` sections first — every task implicitly includes them
 - Parse affected services
 - Note validation commands
 
@@ -732,39 +691,25 @@ For each affected service, read:
 
 ### 3. Execute Tasks Sequentially
 For each task in the plan:
-1. Read the task specification, including its `Interfaces` block
+1. Read the task specification
 2. Read pattern reference files
-3. Implement the change (apply the ladder above)
-4. Run task's validation command and confirm the expected output
+3. Implement the change
+4. Run task's validation command
 5. Fix any issues before proceeding
+6. Mark task complete in your tracking
 
 ### 4. Per-Phase Validation
-After completing each phase, run service tests.
+After completing each phase:
+```bash
+cd {service} && npm test  # or appropriate test command
+```
 
 ### 5. Final Validation
-Run all validation commands from the plan — per-service first, then
-integration.
-
-### 6. Fresh-Eyes Review
-Dispatch ONE review subagent with fresh context (no session history) to run
-`/validation:code-review` against the full diff, with the plan file as its
-spec. One fresh-context pass at the end catches the drift that accumulates
-during long implementation sessions.
-
-- Fix all Critical issues it reports, then re-run final validation
-- Log Warnings in the execution report; fix them only if cheap
-
-### 7. Verify Before Claiming Done
-Apply the `verification-before-completion` skill: no completion claims
-without fresh verification evidence. Run each validation command, read the
-full output, and report the actual state — especially in unattended runs,
-where the report is the only witness.
+Run all validation commands from the plan.
 
 ## Error Handling
 - If a task fails validation, fix before proceeding
 - If blocked, document the blocker and ask user for guidance
-- In unattended runs: mark the task BLOCKED in the report, skip dependents, continue with independent tasks
-- If final validation fails in an unattended run and cannot be fixed: execute the plan's `Rollback` section rather than leaving the tree half-changed, and record the rollback in the report
 - Do not skip tasks without user approval
 
 ## Output Report
@@ -775,13 +720,12 @@ where the report is the only witness.
 ### Summary
 - Plan: `{plan-path}`
 - Status: {Complete | Partial | Blocked}
+- Duration: {start to end}
 
 ### Completed Tasks
 - [x] Task 1.1: {description}
+- [x] Task 1.2: {description}
 - [ ] Task 2.1: {description} - {reason if incomplete}
-
-### Skipped as Unnecessary (ladder rung 1)
-- {anything the plan called for that turned out not to need to exist, and why}
 
 ### Files Created
 | File | Purpose |
@@ -791,19 +735,21 @@ where the report is the only witness.
 ### Files Modified
 | File | Changes |
 |------|---------|
-| `{path}` | {summary} |
+| `{path}` | {summary of changes} |
 
 ### Validation Results
-{actual output of validation commands — fresh runs, not recalled}
+```
+{output of validation commands}
+```
 
-### Review Findings
-- Critical: {n} found, {n} fixed
-- Warnings: {list, with fixed/deferred}
+### Issues Encountered
+{Any problems and how they were resolved}
 
 ### Next Steps
+- [ ] Run `/validation:code-review`
 - [ ] Run `/commit`
 ```
-`````
+```
 
 #### `.claude/commands/validation/validate.md`
 
@@ -1327,118 +1273,6 @@ Branch: {branch-name}
 Next: Push with `git push` or continue development
 ```
 ```
-
-#### `.claude/commands/refactor.md`
-
-`````markdown
----
-description: Behavior-preserving refactor of a targeted area, run after development
----
-
-# Refactor: Clean a Targeted Area
-
-Improve the internal structure of `$ARGUMENTS` without changing what it does.
-Run this after development is complete and validated — never mid-feature.
-
-## Arguments
-
-`$ARGUMENTS` - Target file, directory, or service (required)
-
-## The Iron Rule
-
-**Preserve behavior exactly.** No functional changes, no API changes visible
-outside the target, no "while I'm here" fixes. If something looks like a bug,
-it goes on the Review List — fixing it here would hide a behavior change
-inside a refactor commit.
-
-## Step 0: Green Baseline (gate)
-
-1. Run the target's validation commands (tests, lint, build).
-2. **If validation fails: STOP.** Report the failures and exit. Refactoring on
-   a red baseline makes behavior preservation unprovable.
-3. Note which parts of the target have test coverage. Uncovered code gets only
-   provably-safe transforms (Pass 1 deletions confirmed by search, renames of
-   symbols whose call sites are all inside the target); everything riskier is
-   flagged, not changed.
-
-## Refactoring Passes (in this order)
-
-Run the passes in order — deletion first shrinks everything later passes must
-read. After each pass: run validation, then commit (`refactor: pass N — {summary}`).
-One pass per commit keeps the history bisectable and each step revertable.
-
-### Pass 1: Delete
-- Unused functions, methods, classes (verify zero references with Grep across
-  the whole repo, not just the target)
-- Unreachable branches, unused imports, commented-out code blocks
-- If you cannot *prove* something is dead (dynamic dispatch, reflection,
-  external callers, config-driven entry points) → Review List, don't delete.
-
-### Pass 2: Consolidate
-- Duplicate and near-duplicate logic → one shared helper, callers updated
-- Place helpers at the lowest shared level; don't create a `utils` dumping ground
-- Near-duplicates that differ in subtle ways worth keeping → Review List with
-  the difference named
-
-### Pass 3: Restructure
-- Reduce nesting: early returns, guard clauses, invert conditions
-- Split god functions/classes: one responsibility per unit
-- Separate concerns: I/O (network, disk, DB) apart from business logic so the
-  logic is testable without mocks
-- Organize: logical ordering within files, split oversized files, clear module
-  boundaries — follow the codebase's existing conventions
-
-### Pass 4: Clarify
-- Rename for intention: `d` → `days_until_expiry`. Only rename symbols whose
-  call sites all live inside the target; public/exported names → Review List
-- Magic numbers/strings → named constants
-- Simplify clever/dense code into explicit readable code (a one-liner that
-  needs a comment to decode becomes three clear lines)
-- Add type hints and docstrings — docstrings say *why*, not *what*; skip
-  docstrings that restate the signature
-
-## Flag, Don't Fix
-
-Anything below goes on the Review List, never silently changed:
-- Suspicious logic or a possible bug
-- Dead code you can't prove dead
-- Public API renames or signature changes that would improve clarity
-- Behavior that looks unintended but is covered by a passing test
-
-## Step Final: Verify
-
-Apply `verification-before-completion`: re-run the FULL validation suite
-fresh, read the output, and confirm the diff contains no behavior change
-(no test files weakened, no assertions removed, no config values altered).
-
-## Output Report
-
-```markdown
-## Refactor Report: {target}
-
-### Baseline
-- Validation before: PASS ({command output summary})
-- Coverage gaps: {areas limited to safe transforms}
-
-### Changes by Pass
-| Pass | Commits | Summary |
-|------|---------|---------|
-| 1 Delete | {sha} | {n} dead functions, {n} unused imports removed |
-| 2 Consolidate | {sha} | {duplicates merged into which helpers} |
-| 3 Restructure | {sha} | {functions split, nesting reduced where} |
-| 4 Clarify | {sha} | {renames, constants, types/docs added} |
-
-### Metrics
-- Lines: {before} → {after}
-- Files: {before} → {after}
-
-### Review List (flagged, NOT changed)
-- [ ] `{file}:{line}` — {suspicious logic / uncertain dead code / public rename candidate}: {why flagged}
-
-### Validation After
-{fresh full-suite output — actual run, not recalled}
-```
-`````
 
 #### `.claude/commands/init-project.md`
 

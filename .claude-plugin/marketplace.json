@@ -8,7 +8,7 @@
       "name": "claude-setup-template",
       "source": ".",
       "description": "Bootstrap Claude Code projects with stack-aware skills, agents, commands, hooks, MCP, and settings.",
-      "version": "0.3.1",
+      "version": "0.1.0",
       "category": "scaffolding"
     }
   ]
