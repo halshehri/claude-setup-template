@@ -23,7 +23,7 @@ mkdir -p .claude/agents
 mkdir -p .claude/commands/core_piv_loop
 mkdir -p .claude/commands/validation
 mkdir -p .claude/commands/github_bug_fix
-mkdir -p .claude/reference
+mkdir -p .claude/skills
 mkdir -p .agents/plans
 ```
 
@@ -36,8 +36,11 @@ Based on detected structure, create:
 ### 4. Create Commands
 Copy standard commands from template.
 
-### 5. Create Reference Docs
-Based on detected tech stack, create relevant best practice docs.
+### 5. Create Skills
+Based on the detected tech stack, create one skill per technology at
+`.claude/skills/<name>/SKILL.md` — a folder per skill, the file always named `SKILL.md`,
+with `name` and `description` in YAML frontmatter. A flat `.claude/skills/<name>.md`
+is silently ignored by Claude Code.
 
 ## Output
 ```markdown
@@ -46,7 +49,7 @@ Based on detected tech stack, create relevant best practice docs.
 ### Structure Created
 - [x] .claude/agents/
 - [x] .claude/commands/
-- [x] .claude/reference/
+- [x] .claude/skills/<name>/SKILL.md
 - [x] .agents/plans/
 
 ### Files Created

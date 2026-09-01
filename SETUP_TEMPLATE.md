@@ -61,7 +61,7 @@ org-parent/                <- NO .git (local folder only)
 - [ ] Create `.claude/PRD.md`
 - [ ] Create agent definitions in `.claude/agents/`
 - [ ] Create commands in `.claude/commands/`
-- [ ] Create reference docs in `.claude/reference/`
+- [ ] Create skills as `.claude/skills/{name}/SKILL.md` (folder per skill — a flat `.md` will not load)
 - [ ] Create service-specific `CLAUDE.md` files
 - [ ] (Optional) Create `.claude/settings.local.json`
 - [ ] Test commands by typing `/` in Claude Code
@@ -88,7 +88,7 @@ project-root/
 │   ├── agents/                    # AI agent definitions
 │   │   ├── senior-architect.md
 │   │   └── fullstack-engineer.md
-│   ├── commands/                  # Custom slash commands (skills)
+│   ├── commands/                  # Custom slash commands
 │   │   ├── core_piv_loop/
 │   │   │   ├── prime.md           # /core_piv_loop:prime
 │   │   │   ├── plan-feature.md    # /core_piv_loop:plan-feature
@@ -105,8 +105,12 @@ project-root/
 │   │   ├── feature.md             # /feature
 │   │   ├── init-project.md        # /init-project
 │   │   └── create-prd.md          # /create-prd
-│   ├── reference/                 # Best practices documentation
-│   │   └── {tech}-best-practices.md
+│   ├── skills/                    # Domain expertise, auto-applied by Claude
+│   │   ├── solution-architect/    # ONE FOLDER PER SKILL
+│   │   │   └── SKILL.md           # the filename must be exactly SKILL.md
+│   │   └── {tech}-coding/
+│   │       ├── SKILL.md
+│   │       └── reference/         # optional deep-dive files, loaded on demand
 │   ├── settings.local.json        # Allowed bash commands (optional)
 │   └── PRD.md                     # Product requirements document
 ├── CLAUDE.md                      # Root-level project context
@@ -126,8 +130,11 @@ mkdir -p .claude/agents
 mkdir -p .claude/commands/core_piv_loop
 mkdir -p .claude/commands/validation
 mkdir -p .claude/commands/github_bug_fix
-mkdir -p .claude/reference
 mkdir -p .agents/plans
+
+# One directory per skill — Claude Code loads .claude/skills/<name>/SKILL.md only
+mkdir -p .claude/skills/solution-architect
+mkdir -p .claude/skills/nodejs-coding      # repeat per technology in your stack
 ```
 
 ---
@@ -238,11 +245,11 @@ cd {service1} && npm run build
 
 See each service's CLAUDE.md for service-specific variables.
 
-## Reference Documentation
+## Skills
 
-See `.claude/reference/` for best practices:
-- `{tech1}-best-practices.md`
-- `{tech2}-best-practices.md`
+Domain expertise lives in `.claude/skills/<name>/SKILL.md` and is applied automatically:
+- `{tech1}-coding`
+- `{tech2}-coding`
 ```
 
 ---
@@ -1301,7 +1308,7 @@ mkdir -p .claude/agents
 mkdir -p .claude/commands/core_piv_loop
 mkdir -p .claude/commands/validation
 mkdir -p .claude/commands/github_bug_fix
-mkdir -p .claude/reference
+mkdir -p .claude/skills/solution-architect   # one directory per skill
 mkdir -p .agents/plans
 ```
 
@@ -1324,7 +1331,7 @@ Based on detected tech stack, create relevant best practice docs.
 ### Structure Created
 - [x] .claude/agents/
 - [x] .claude/commands/
-- [x] .claude/reference/
+- [x] .claude/skills/{name}/SKILL.md
 - [x] .agents/plans/
 
 ### Files Created
@@ -1455,11 +1462,39 @@ Guide user through:
 
 ---
 
-### Step 6: Create Reference Documentation
+### Step 6: Create Skills
 
-Create `.claude/reference/{technology}-best-practices.md` for your tech stack.
+Skills carry domain expertise and are applied automatically by Claude when relevant.
 
-Example for Node.js/TypeScript:
+**Layout is not optional.** Claude Code discovers a skill only at
+`.claude/skills/<name>/SKILL.md`. A flat `.claude/skills/<name>.md` is silently ignored —
+it never shows up in the available-skills list, and any agent naming it in `skills:`
+frontmatter points at nothing.
+
+```
+.claude/skills/nodejs-coding/SKILL.md      ✅ loads
+.claude/skills/nodejs-coding.md            ❌ silently ignored
+```
+
+Every `SKILL.md` needs YAML frontmatter with `name` and `description` (a skill without
+them also fails to load); `allowed-tools` is optional:
+
+```yaml
+---
+name: nodejs-coding
+description: Apply Node.js and TypeScript coding standards when writing backend code, APIs, or server-side JavaScript. Use when implementing features in Node.js services.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
+---
+```
+
+Verify after creating them:
+
+```bash
+ls .claude/skills/*.md 2>/dev/null && echo "BROKEN: flat skill files above"
+for d in .claude/skills/*/; do [ -f "$d/SKILL.md" ] || echo "BROKEN: $d has no SKILL.md"; done
+```
+
+Example body for a Node.js/TypeScript skill:
 
 ```markdown
 # Node.js/TypeScript Best Practices
@@ -1566,7 +1601,7 @@ When adding this setup to an existing project:
 
 ### 2. Create Minimal Structure
 ```bash
-mkdir -p .claude/commands .claude/reference .agents/plans
+mkdir -p .claude/commands .claude/skills .agents/plans
 ```
 
 ### 3. Document What Exists
@@ -1602,7 +1637,15 @@ Consider whether to commit Claude config:
 ## Skills & Commands Reference
 
 ### How Skills Work
-Commands in `.claude/commands/` become slash commands (skills):
+
+Skills live in `.claude/skills/<name>/SKILL.md` — one folder per skill, the file always
+named `SKILL.md`, with `name` and `description` in YAML frontmatter. Claude applies them
+automatically when the description matches the task; agents can scope themselves to a
+subset via `skills:` frontmatter. A flat `.claude/skills/<name>.md` never loads.
+
+### How Commands Work
+
+Commands in `.claude/commands/` become slash commands:
 
 | File Location | Command |
 |--------------|---------|

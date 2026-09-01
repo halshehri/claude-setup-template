@@ -78,11 +78,12 @@ Based on collected information, generate files from templates in `bootstrap/temp
 │   │   ├── feature.md
 │   │   ├── init-project.md
 │   │   └── create-prd.md
-│   ├── skills/
-│   │   └── {generated based on tech stack}
-│   ├── reference/
-│   │   ├── {generated based on tech stack}
-│   │   └── adk/              # (if Google ADK selected)
+│   ├── skills/                       # ONE FOLDER PER SKILL — never a flat .md
+│   │   ├── solution-architect/
+│   │   │   └── SKILL.md
+│   │   └── {skill-name}/             # per tech stack
+│   │       ├── SKILL.md
+│   │       └── reference/            # optional (e.g. google-adk ships 7 files)
 │   └── PRD.md
 ├── CLAUDE.md
 └── {service}/
@@ -92,21 +93,43 @@ Based on collected information, generate files from templates in `bootstrap/temp
 #### File Generation Rules
 
 **Skills** - Generate based on tech stack:
-| Tech Stack | Skills to Generate |
-|------------|-------------------|
+| Tech Stack | Skill (template folder name) |
+|------------|------------------------------|
 | Node.js/TypeScript | `nodejs-coding` |
 | Python | `python-coding` |
-| React/Vue/Frontend | `frontend-development` |
+| React/Vue/Frontend | `react-frontend` |
 | PostgreSQL | `postgres` |
 | MongoDB | `mongodb` |
 | Google ADK | `google-adk` |
 | Always | `solution-architect` |
+
+> **CRITICAL — skill file layout.** Claude Code only discovers a skill at
+> `.claude/skills/<name>/SKILL.md`. A flat `.claude/skills/<name>.md` is silently
+> ignored: it never appears in the available-skills list and any agent that names it
+> in frontmatter points at nothing.
+>
+> For each selected skill, copy the whole template folder:
+>
+> ```
+> bootstrap/templates/skills/<name>/SKILL.template.md  →  .claude/skills/<name>/SKILL.md
+> bootstrap/templates/skills/<name>/reference/*        →  .claude/skills/<name>/reference/*
+> ```
+>
+> Create the `<name>/` directory first. Never rename `SKILL.md`, never flatten the
+> folder, and never drop the YAML frontmatter — a skill without `name` and
+> `description` also fails to load.
 
 **Reference Files** - For Google ADK, the deep reference docs ship inside the skill folder (`templates/skills/google-adk/reference/`) and are copied with the skill — no separate handling needed.
 
 **Agents** - Always generate:
 - `senior-architect.md` (Opus model, assigned: solution-architect skill + relevant tech skills)
 - `fullstack-engineer.md` (Sonnet model, assigned: all tech skills for the project)
+
+> The agents' `skills:` frontmatter must list **only skills actually generated in this
+> run** (plus plugin skills whose plugin is installed). A name that does not resolve to
+> a `.claude/skills/<name>/SKILL.md` — or to an installed plugin's `<plugin>:<skill>` —
+> is dead weight in the agent definition. Substitute `{{TECH_SKILLS}}` with the
+> comma-separated list of generated skill names.
 
 **Commands** - Always generate the full set from templates.
 
@@ -132,16 +155,28 @@ For existing projects, follow these rules:
 
 After generating files:
 
-1. List all created files
-2. Show summary of configuration
-3. Suggest next steps:
+1. **Verify skill discovery** — for every generated skill, confirm all three hold:
+   - `.claude/skills/<name>/SKILL.md` exists (a flat `.claude/skills/<name>.md` means it will not load — move it into its folder)
+   - its frontmatter has both `name:` and `description:`
+   - every name in each agent's `skills:` frontmatter resolves to one of those folders
+
+   ```bash
+   ls .claude/skills/*.md 2>/dev/null && echo "BROKEN: flat skill files above — move each to .claude/skills/<name>/SKILL.md"
+   for d in .claude/skills/*/; do
+     [ -f "$d/SKILL.md" ] || echo "BROKEN: $d has no SKILL.md"
+   done
+   ```
+
+2. List all created files
+3. Show summary of configuration
+4. Suggest next steps:
    ```
    ## Setup Complete!
 
    ### Files Created
    - .claude/agents/senior-architect.md
    - .claude/agents/fullstack-engineer.md
-   - .claude/skills/{skills}
+   - .claude/skills/{skill}/SKILL.md  (one folder per skill)
    - .claude/commands/{commands}
    - CLAUDE.md
    - {service}/CLAUDE.md
@@ -166,9 +201,8 @@ All templates are in `bootstrap/templates/`:
 - `agents/` - Agent templates
 - `commands/` - Command templates
 - `claude-md/` - CLAUDE.md templates
-- `reference/` - Reference documentation templates (e.g., `reference/adk/`)
 - `settings/` - settings.json template (permissions, env, model)
-- `hooks/` - Hook fragments to merge into settings.json (format-on-edit, block-secrets, session-start-context, auto-validate, stop-execution-report)
+- `hooks/` - Hook fragments to merge into settings.json (format-on-edit, session-start-context, stop-execution-report)
 - `mcp/` - `.mcp.json` template with commented filesystem/github/postgres/sentry servers
 
 ## Plugin Distribution
@@ -184,18 +218,64 @@ After generating skills/agents/commands, also offer to install:
 
 ## Variable Substitution
 
-When generating from templates, replace these variables:
+Every `{{VARIABLE}}` in a template MUST be substituted before the generated file is
+written. An unsubstituted placeholder ships a literal `{{API_ENDPOINTS}}` into the user's
+CLAUDE.md. If a value is genuinely unknown, write a short honest placeholder line
+(e.g. `_TBD — not detected during bootstrap._`) rather than leaving the braces.
+
+**Verify before finishing:**
+
+```bash
+grep -rn "{{[A-Z_]*}}" .claude CLAUDE.md */CLAUDE.md 2>/dev/null && echo "BROKEN: unsubstituted variables above"
+```
+
+### Shared
+
+| Variable | Used in | Description |
+|----------|---------|-------------|
+| `{{PROJECT_NAME}}` | root CLAUDE.md, settings | Project name |
+| `{{TECH_STACK}}` | root CLAUDE.md | Tech stack summary |
+| `{{SERVICES_TABLE}}` | root CLAUDE.md | Markdown table of services |
+| `{{SERVICES}}` | root CLAUDE.md | List of service names |
+| `{{SERVICE_CLAUDE_MD_LINKS}}` | root CLAUDE.md | Links to each service CLAUDE.md |
+| `{{ARCHITECTURE_DIAGRAM}}` | root CLAUDE.md | ASCII/mermaid architecture sketch |
+| `{{DATABASE_TABLES}}` | root CLAUDE.md | Key tables/collections |
+| `{{DEV_COMMANDS}}` / `{{BUILD_COMMANDS}}` / `{{TEST_COMMANDS}}` | root CLAUDE.md | Per-service command lists |
+| `{{SKILLS_DOCS}}` | root CLAUDE.md | Bulleted list of the skills generated this run |
+| `{{TECH_SKILLS}}` | both agents | Comma-separated names of the skills generated this run, for `skills:` frontmatter |
+
+### Multi-repo only
 
 | Variable | Description |
 |----------|-------------|
-| `{{PROJECT_NAME}}` | Project name |
-| `{{PROJECT_TYPE}}` | "Monorepo" or "Multi-repo Microservices" |
-| `{{SERVICES_TABLE}}` | Generated services table |
-| `{{TECH_STACK}}` | Tech stack summary |
-| `{{SERVICE_NAME}}` | Individual service name |
-| `{{SERVICE_PURPOSE}}` | Service description |
-| `{{SERVICE_TECH}}` | Service tech stack |
-| `{{SKILLS_LIST}}` | Comma-separated skills for agents |
+| `{{GITHUB_ORG}}` | GitHub organization owning the service repos |
+| `{{SERVICE_REPOS_TABLE}}` | Table mapping service → repo URL |
+
+### Service CLAUDE.md
+
+| Variable | Description |
+|----------|-------------|
+| `{{SERVICE_NAME}}` | Service name |
+| `{{SERVICE_PURPOSE}}` | What the service does |
+| `{{RESPONSIBILITIES}}` | Bulleted responsibilities |
+| `{{LANGUAGE}}` / `{{RUNTIME}}` / `{{FRAMEWORK}}` / `{{DATABASE}}` | Stack details |
+| `{{DEPENDENCIES}}` | Key dependencies |
+| `{{INTEGRATIONS}}` | External systems it talks to |
+| `{{DIRECTORY_STRUCTURE}}` | Tree of the service source layout |
+| `{{KEY_FILES}}` | Notable entry-point files |
+| `{{ROUTES_PATH}}` / `{{CONTROLLERS_PATH}}` / `{{SERVICES_PATH}}` / `{{MODELS_PATH}}` | Source subdirectories |
+| `{{API_ENDPOINTS}}` | Endpoint list |
+| `{{ENV_VARIABLES}}` | Required env vars |
+| `{{CODE_CONVENTIONS}}` | Service-specific conventions |
+| `{{INSTALL_COMMAND}}` / `{{DEV_COMMAND}}` / `{{BUILD_COMMAND}}` / `{{TEST_COMMAND}}` / `{{LINT_COMMAND}}` | Commands |
+| `{{UNIT_TEST_COMMAND}}` / `{{INTEGRATION_TEST_COMMAND}}` | Narrower test commands |
+
+### Harness
+
+| Variable | Used in | Description |
+|----------|---------|-------------|
+| `{{PROJECT_NAME}}`, `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}`, `{{LINT_COMMAND}}` | `settings/settings.local.template.json` | Allowed commands |
+| `{{FORMAT_COMMAND}}` | `hooks/format-on-edit.template.json` | Formatter binary (prettier, black, gofmt, rustfmt) |
 
 ## Error Handling
 

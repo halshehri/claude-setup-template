@@ -4,7 +4,19 @@ A comprehensive template for setting up Claude Code in your projects. This repos
 
 ## Quick Start
 
-### Option 1: Ask Claude to Set Up Your Project
+### Option 1: Install as a Plugin (recommended for repeat use)
+
+Install once, and the bootstrap skill is available in every project:
+
+```
+/plugin marketplace add halshehri/claude-setup-template
+/plugin install claude-setup-template
+```
+
+Then in any project, tell Claude `set up Claude Code for this project` — the `bootstrap`
+skill picks it up automatically.
+
+### Option 2: Ask Claude to Set Up Your Project
 
 In your project directory, tell Claude:
 
@@ -17,11 +29,13 @@ Claude will:
 2. Analyze existing code (if brownfield)
 3. Generate customized configuration files
 
-### Option 2: Manual Setup
+### Option 3: Manual Setup
 
 1. Clone this repository
 2. Copy the relevant templates to your project
 3. Customize the placeholders
+
+See [SETUP_TEMPLATE.md](SETUP_TEMPLATE.md) for the full manual walkthrough.
 
 ## What Gets Generated
 
@@ -39,13 +53,13 @@ your-project/
 │   │   ├── github_bug_fix/       # Bug investigation & fixes
 │   │   └── commit.md             # Git commits
 │   ├── skills/                   # Domain expertise (auto-applied)
+│   │   │                         # one folder per skill, file named SKILL.md
 │   │   ├── solution-architect/   # Architecture thinking
 │   │   ├── nodejs-coding/        # Node.js patterns (if applicable)
 │   │   ├── python-coding/        # Python patterns (if applicable)
 │   │   ├── react-frontend/       # React patterns (if applicable)
 │   │   ├── postgres/             # PostgreSQL patterns (if applicable)
 │   │   └── mongodb/              # MongoDB patterns (if applicable)
-│   ├── reference/                # Best practices docs
 │   └── PRD.md                    # Product requirements
 ├── CLAUDE.md                     # Project overview
 └── {service}/
@@ -156,18 +170,23 @@ The bootstrap includes skill templates for:
 
 ### Adding New Skills
 
-Create `.claude/skills/{skill-name}/SKILL.md`:
+Create `.claude/skills/{skill-name}/SKILL.md` — one folder per skill, the file always
+named `SKILL.md`. A flat `.claude/skills/{skill-name}.md` is silently ignored by Claude
+Code and will never load.
 
 ```markdown
 ---
 name: my-custom-skill
 description: When to apply this skill
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # My Custom Skill
 
 {Instructions for Claude}
 ```
+
+Both `name` and `description` are required — a skill missing either also fails to load.
 
 ### Adding New Commands
 

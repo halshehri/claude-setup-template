@@ -102,10 +102,10 @@ For cross-service changes, commit to each service separately.
 
 See each service's CLAUDE.md for service-specific variables.
 
-## Reference Documentation
+## Skills
 
-See `.claude/reference/` for best practices:
-{{REFERENCE_DOCS}}
+Domain expertise lives in `.claude/skills/<name>/SKILL.md` and is applied automatically:
+{{SKILLS_DOCS}}
 
 ## Service-Specific Documentation
 

@@ -17,6 +17,8 @@ claude-setup-template/
 ├── CLAUDE.md                       # This file
 ├── README.md                       # User-facing documentation
 ├── SETUP_TEMPLATE.md               # Detailed manual setup guide
+├── skills/                         # Plugin entry point (auto-discovered on install)
+│   └── bootstrap/SKILL.md          # Thin wrapper → bootstrap/SKILL.md
 ├── .claude/
 │   └── settings.local.json         # Template repo permissions
 ├── .gitignore
@@ -62,9 +64,7 @@ claude-setup-template/
         │   └── settings.local.template.json
         ├── hooks/                  # Hook fragments to merge into settings.json
         │   ├── format-on-edit.template.json
-        │   ├── block-secrets.template.json
         │   ├── session-start-context.template.json
-        │   ├── auto-validate.template.json
         │   └── stop-execution-report.template.json
         ├── mcp/                    # .mcp.json template
         │   └── .mcp.template.json
@@ -87,7 +87,7 @@ The process is driven by `bootstrap/SKILL.md` (5 phases):
 
 ## Template Conventions
 
-- **Skills** (`skills/{name}/SKILL.template.md`): folder-based, frontmatter `name` + `description` + `allowed-tools`; auto-applied by Claude when relevant. Drop additional `.md` files alongside for progressive disclosure.
+- **Skills** (`skills/{name}/SKILL.template.md`): folder-based, frontmatter `name` + `description` + `allowed-tools`; auto-applied by Claude when relevant. Drop additional `.md` files alongside for progressive disclosure. **Generated to `.claude/skills/{name}/SKILL.md` — never a flat `.claude/skills/{name}.md`, which Claude Code silently ignores.**
 - **Commands** (`commands/*.template.md`): YAML frontmatter with `description` (also supports `argument-hint`, `allowed-tools`, `model`); invoked via `/command-name`
 - **Agents** (`agents/*.template.md`): YAML frontmatter with `name`, `description`, `model`, `tools`, optional `color`
 - **Hooks** (`hooks/*.template.json`): JSON fragments merged into the target's `settings.json` under the `hooks` key
@@ -98,6 +98,7 @@ The process is driven by `bootstrap/SKILL.md` (5 phases):
 
 ## Key Entry Points
 
+- `skills/bootstrap/SKILL.md` - Plugin entry point. Auto-discovered when installed via `claude plugin install`; resolves the template root through `${CLAUDE_PLUGIN_ROOT}` and delegates to `bootstrap/SKILL.md`.
 - `bootstrap/SKILL.md` - Start here. Orchestrates the entire bootstrap process.
 - `bootstrap/questions.md` - Question flow and auto-detection logic.
 - `SETUP_TEMPLATE.md` - Complete manual reference with all file content inline.
@@ -109,8 +110,8 @@ The process is driven by `bootstrap/SKILL.md` (5 phases):
 - 2 agent templates in `bootstrap/templates/agents/`
 - 3 CLAUDE.md templates in `bootstrap/templates/claude-md/`
 - 7 ADK reference files in `bootstrap/templates/skills/google-adk/reference/` (progressive disclosure)
-- 5 hook templates in `bootstrap/templates/hooks/`
+- 3 hook templates in `bootstrap/templates/hooks/`
 - 1 settings template in `bootstrap/templates/settings/`
 - 1 MCP template in `bootstrap/templates/mcp/`
 - 1 gitignore template
-- Plugin manifest at `.claude-plugin/`
+- Plugin manifest at `.claude-plugin/`, entry skill at `skills/bootstrap/SKILL.md`
